@@ -7,6 +7,24 @@ exports.aliasTopProducts = (req, res, next) => {
   next();
 };
 
+exports.getProductStats = async (req, res) => {
+  try {
+    const stats = await productService.getProductStatsService();
+
+    res.status(200).json({
+      status: 'success',
+      data: {
+        stats
+      }
+    });
+  } catch (err) {
+    res.status(404).json({
+      status: 'fail',
+      message: err.message
+    });
+  }
+};
+
 exports.getAllProducts = async (req, res) => {
   try {
     const products = await productService.getAllProductsService(req.query);

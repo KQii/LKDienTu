@@ -1,5 +1,13 @@
 const productModel = require('../models/productModel');
 
+exports.getProductStatsService = async () => {
+  const productStats = await productModel.getProductStats();
+  if (!productStats) {
+    throw new Error('Products not found');
+  }
+  return productStats;
+};
+
 exports.getAllProductsService = async reqQuery => {
   const allProducts = await productModel.getAllProducts(reqQuery);
   if (!allProducts) {
@@ -45,9 +53,7 @@ exports.updateProductService = async (productId, productData) => {
       .at(1)
       .slice(-1) === '0'
   ) {
-    throw new Error(
-      `Product with ID ${productId} not found or no changes detected.`
-    );
+    throw new Error(`No changes detected.`);
   }
   return updatedProduct;
 };
