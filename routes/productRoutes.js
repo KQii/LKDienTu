@@ -13,6 +13,10 @@ const router = express.Router();
 // router.route('/monthly-plan/:year').get(productController.getMonthlyPlan);
 
 router
+  .route('/top-5-cheap')
+  .get(productController.aliasTopProducts, productController.getAllProducts);
+
+router
   .route('/')
   .get(productController.getAllProducts)
   .post(productController.createProduct);

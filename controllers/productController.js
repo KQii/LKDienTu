@@ -1,5 +1,12 @@
 const productService = require('../services/productService');
 
+exports.aliasTopProducts = (req, res, next) => {
+  req.query.limit = 5;
+  req.query.sort = 'Price';
+  req.query.fields = 'ProductName,Quantity,Price';
+  next();
+};
+
 exports.getAllProducts = async (req, res) => {
   try {
     const products = await productService.getAllProductsService(req.query);

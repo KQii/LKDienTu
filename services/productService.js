@@ -1,7 +1,7 @@
 const productModel = require('../models/productModel');
 
-exports.getAllProductsService = async filter => {
-  const allProducts = await productModel.getAllProducts(filter);
+exports.getAllProductsService = async reqQuery => {
+  const allProducts = await productModel.getAllProducts(reqQuery);
   if (!allProducts) {
     throw new Error('Products not found');
   }

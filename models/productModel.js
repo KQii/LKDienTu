@@ -15,16 +15,21 @@ const queryString = (operator, fieldName) => {
   }
 };
 
-exports.getAllProducts = async filter => {
+const getColumns = async (tableName, excludedFields) => {
+  const [rows] = await db.query(`SHOW COLUMNS FROM ${tableName}`);
+  const columns = rows.map(row => row.Field);
+  return columns.filter(col => !excludedFields.includes(col)).join(', ');
+};
+
+exports.getAllProducts = async reqQuery => {
   // const [rows] = await db.query('SELECT * FROM product');
   // return rows;
 
-  // console.log(filter);
-  const { quantity, price, hide, sale } = filter;
+  // console.log(reqQuery);
+  const { quantity, price, hide, sale } = reqQuery;
   const conditions = [];
   const values = [];
 
-  console.log(quantity);
   if (quantity) {
     if (typeof quantity === 'object') {
       for (let i = 0; i < Object.keys(quantity).length; i++) {
@@ -40,8 +45,18 @@ exports.getAllProducts = async filter => {
     }
   }
   if (price) {
-    conditions.push('Price = ?');
-    values.push(price);
+    if (typeof price === 'object') {
+      for (let i = 0; i < Object.keys(price).length; i++) {
+        const operator = Object.keys(price)[i];
+        const value = Object.values(price)[i];
+
+        conditions.push(queryString(operator, 'Price'));
+        values.push(value);
+      }
+    } else {
+      conditions.push('Price = ?');
+      values.push(price);
+    }
   }
   if (hide) {
     conditions.push('Hide = ?');
@@ -56,6 +71,51 @@ exports.getAllProducts = async filter => {
   if (conditions.length > 0) {
     query += ` WHERE ${conditions.join(' AND ')}`;
   }
+  if (reqQuery.sort) {
+    const sortConditionsArr = reqQuery.sort.split(',');
+
+    query += ` ORDER BY `;
+
+    sortConditionsArr.forEach(el => {
+      // let sortField = `${el[0].toUpperCase() + el.slice(1)}`;
+      let sortField = `${el}`;
+      let type = 'ASC';
+
+      if (el[0] === '-') {
+        // sortField = `${el[1].toUpperCase() + el.slice(2)}`;
+        sortField = `${el.slice(1)}`;
+        type = 'DESC';
+      }
+
+      query += `${sortField} ${type}, `;
+    });
+
+    query = query.slice(0, -2);
+  }
+  if (reqQuery.fields) {
+    const { fields } = reqQuery;
+
+    if (fields.includes('-')) {
+      const excludedFields = fields.split(',').map(el => el.slice(1));
+
+      const selectedFields = await getColumns('product', excludedFields);
+      query = query.replace('*', selectedFields);
+    }
+
+    query = query.replace('*', fields);
+  }
+
+  const page = +reqQuery.page || 1;
+  const limit = +reqQuery.limit || 10;
+  const skip = (page - 1) * limit;
+
+  if (reqQuery.page) {
+    const [rows] = await db.query('SELECT COUNT(*) AS total_rows FROM product');
+    const numProducts = rows[0].total_rows;
+    if (skip >= numProducts) throw new Error('This page does not exist');
+  }
+
+  query += ` LIMIT ${skip}, ${limit}`;
 
   const [rows] = await db.execute(query, values);
   return rows;
