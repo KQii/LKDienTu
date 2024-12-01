@@ -93,18 +93,18 @@ class APIFeatures {
     return this;
   }
 
-  async paginate(tableName) {
+  paginate() {
     const page = +this.queryStr.page || 1;
     const limit = +this.queryStr.limit || 5;
     const skip = (page - 1) * limit;
 
-    if (this.queryStr.page) {
-      const [rows] = await db.query(
-        `SELECT COUNT(*) AS total_rows FROM ${tableName}`
-      );
-      const numProducts = rows[0].total_rows;
-      if (skip >= numProducts) throw new Error('This page does not exist');
-    }
+    // if (this.queryStr.page) {
+    //   const [rows] = await db.query(
+    //     `SELECT COUNT(*) AS total_rows FROM ${tableName}`
+    //   );
+    //   const numProducts = rows[0].total_rows;
+    //   if (skip >= numProducts) throw new Error('This page does not exist');
+    // }
 
     this.query += ` LIMIT ${skip}, ${limit}`;
     return this;

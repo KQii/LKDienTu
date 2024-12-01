@@ -1,66 +1,46 @@
 const productModel = require('../models/productModel');
+const AppError = require('../utils/appError');
 
 exports.getProductStatsService = async () => {
   const productStats = await productModel.getProductStats();
   if (!productStats) {
-    throw new Error('Products not found');
+    throw new AppError('No stats found', 404);
   }
   return productStats;
 };
 
 exports.getAllProductsService = async reqQuery => {
   const allProducts = await productModel.getAllProducts(reqQuery);
-  if (!allProducts) {
-    throw new Error('Products not found');
-  }
+  // if (!allProducts) {
+  //   throw new AppError('No product found', 404);
+  // }
   return allProducts;
 };
 
 exports.getProductDetailsService = async id => {
   const product = await productModel.getProductById(id);
   if (!product) {
-    throw new Error('Product not found');
+    throw new AppError(`Product with ID ${id} not found`, 404);
   }
   return product;
 };
 
 exports.createNewProductService = async productData => {
-  // Validate (simple)
-  const { ProductName: productName, Price: price } = productData;
-  if (!productName || typeof productName !== 'string') {
-    throw new Error('Invalid product name');
-  }
-
-  if (!price || typeof price !== 'number' || price <= 0) {
-    throw new Error('Invalid product price');
-  }
-
   const result = await productModel.createProduct(productData);
   return result;
 };
 
 exports.updateProductService = async (productId, productData) => {
-  const { result, updatedProduct } = await productModel.updateProductById(
+  const { updatedProduct } = await productModel.updateProductById(
     productId,
     productData
   );
-
-  // console.log(result, updatedProduct);
-
-  if (
-    result.info
-      .split('  ')
-      .at(1)
-      .slice(-1) === '0'
-  ) {
-    throw new Error(`No changes detected.`);
-  }
   return updatedProduct;
 };
 
 exports.deleteProductService = async productId => {
   const result = await productModel.deleteProductById(productId);
   if (result.affectedRows === 0) {
-    throw new Error(`Product with ID ${productId} not found`);
+    throw new AppError(`Product with ID ${productId} not found`, 404);
   }
 };

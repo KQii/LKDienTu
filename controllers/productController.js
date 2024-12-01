@@ -1,4 +1,5 @@
 const productService = require('../services/productService');
+const catchAsync = require('../utils/catchAsync');
 
 exports.aliasTopProducts = (req, res, next) => {
   req.query.limit = 5;
@@ -7,123 +8,76 @@ exports.aliasTopProducts = (req, res, next) => {
   next();
 };
 
-exports.getProductStats = async (req, res) => {
-  try {
-    const stats = await productService.getProductStatsService();
+exports.getProductStats = catchAsync(async (req, res, next) => {
+  const stats = await productService.getProductStatsService();
 
-    res.status(200).json({
-      status: 'success',
-      data: {
-        stats
-      }
-    });
-  } catch (err) {
-    res.status(404).json({
-      status: 'fail',
-      message: err.message
-    });
-  }
-};
+  res.status(200).json({
+    status: 'success',
+    data: {
+      stats
+    }
+  });
+});
 
-exports.getAllProducts = async (req, res) => {
-  try {
-    const products = await productService.getAllProductsService(req.query);
+exports.getAllProducts = catchAsync(async (req, res, next) => {
+  const products = await productService.getAllProductsService(req.query);
 
-    // SEND RESPONSE
-    res.status(200).json({
-      status: 'success',
-      results: products.length,
-      data: {
-        products
-      }
-    });
-  } catch (err) {
-    res.status(404).json({
-      status: 'fail',
-      message: err.message
-    });
-  }
-};
+  // SEND RESPONSE
+  res.status(200).json({
+    status: 'success',
+    results: products.length,
+    data: {
+      products
+    }
+  });
+});
 
-exports.getProduct = async (req, res) => {
-  try {
-    const product = await productService.getProductDetailsService(
-      req.params.id
-    );
+exports.getProduct = catchAsync(async (req, res, next) => {
+  const product = await productService.getProductDetailsService(req.params.id);
 
-    res.status(200).json({
-      status: 'success',
-      data: {
-        product
-      }
-    });
-  } catch (err) {
-    res.status(404).json({
-      status: 'fail',
-      message: err.message
-    });
-  }
-};
+  res.status(200).json({
+    status: 'success',
+    data: {
+      product
+    }
+  });
+});
 
-exports.createProduct = async (req, res) => {
-  try {
-    // const newTour = new Tour({})
-    // newTour.save()
+exports.createProduct = catchAsync(async (req, res, next) => {
+  const newProduct = await productService.createNewProductService(req.body);
 
-    const newProduct = await productService.createNewProductService(req.body);
+  res.status(201).json({
+    status: 'success',
+    data: {
+      product: newProduct
+    }
+  });
+});
 
-    res.status(201).json({
-      status: 'success',
-      data: {
-        product: newProduct
-      }
-    });
-  } catch (err) {
-    res.status(400).json({
-      status: 'fail',
-      message: err.message
-    });
-  }
-};
+exports.updateProduct = catchAsync(async (req, res, next) => {
+  // const tour = await Tour.findByIdAndUpdate(req.params.id, req.body, {
+  //   new: true,
+  //   runValidators: true
+  // });
+  const updatedProduct = await productService.updateProductService(
+    req.params.id,
+    req.body
+  );
 
-exports.updateProduct = async (req, res) => {
-  try {
-    // const tour = await Tour.findByIdAndUpdate(req.params.id, req.body, {
-    //   new: true,
-    //   runValidators: true
-    // });
-    const updatedProduct = await productService.updateProductService(
-      req.params.id,
-      req.body
-    );
+  res.status(200).json({
+    status: 'success',
+    data: {
+      product: updatedProduct
+    }
+  });
+});
 
-    res.status(200).json({
-      status: 'success',
-      data: {
-        product: updatedProduct
-      }
-    });
-  } catch (err) {
-    res.status(404).json({
-      status: 'fail',
-      message: err.message
-    });
-  }
-};
+exports.deleteProduct = catchAsync(async (req, res, next) => {
+  // await Tour.findByIdAndDelete(req.params.id);
+  await productService.deleteProductService(req.params.id);
 
-exports.deleteProduct = async (req, res) => {
-  try {
-    // await Tour.findByIdAndDelete(req.params.id);
-    await productService.deleteProductService(req.params.id);
-
-    res.status(204).json({
-      status: 'success',
-      data: null
-    });
-  } catch (err) {
-    res.status(404).json({
-      status: 'fail',
-      message: err.message
-    });
-  }
-};
+  res.status(204).json({
+    status: 'success',
+    data: null
+  });
+});

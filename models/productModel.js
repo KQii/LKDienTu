@@ -9,20 +9,25 @@ exports.getProductStats = async () => {
 
 exports.getAllProducts = async reqQuery => {
   const query = 'SELECT * FROM product';
-  const features = new APIFeatures(query, reqQuery).filter().sort();
+  const features = new APIFeatures(query, reqQuery)
+    .filter()
+    .sort()
+    .paginate();
   await features.limitFields('product');
-  await features.paginate('product');
 
   const [rows] = await db.execute(features.query, features.values);
-  // return rows;
 
   // Virtual fields
-  const updatedRows = rows.map(row => ({
-    ...row,
-    SalePercent: row.Sale ? `${row.Sale}%` : null,
-    PriceDiscount: row.Price * ((100 - row.Sale) / 100)
-  }));
-  return updatedRows;
+  if (!reqQuery.fields) {
+    const updatedRows = rows.map(row => ({
+      ...row,
+      SalePercent: row.Sale ? `${row.Sale}%` : null,
+      PriceDiscount: row.Price * ((100 - row.Sale) / 100)
+    }));
+    return updatedRows;
+  }
+
+  return rows;
 };
 
 exports.getProductById = async id => {
