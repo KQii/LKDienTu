@@ -1,8 +1,10 @@
+const crypto = require('crypto');
 const { promisify } = require('util');
 const jwt = require('jsonwebtoken');
 const authService = require('../services/authService');
 const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/appError');
+const sendEmail = require('../utils/email');
 
 const signToken = id => {
   return jwt.sign({ id }, process.env.JWT_SECRET, {
@@ -10,23 +12,21 @@ const signToken = id => {
   });
 };
 
-// const changedPasswordAfter = JWTTimestamp => {
-//   if (this.PasswordChangedAt) console.log(this.PasswordChangedAt, JWTTimestamp);
-//   return false;
-// };
+const createSendToken = (account, statusCode, res) => {
+  const token = signToken(account.AccountID);
 
-exports.signup = catchAsync(async (req, res, next) => {
-  const newAccount = await authService.createAccountService(req.body);
-
-  const token = signToken(newAccount.AccountID);
-
-  res.status(201).json({
+  res.status(statusCode).json({
     status: 'success',
     token,
     data: {
-      account: newAccount
+      account
     }
   });
+};
+
+exports.signup = catchAsync(async (req, res, next) => {
+  const newAccount = await authService.createAccountService(req.body);
+  createSendToken(newAccount, 201, res);
 });
 
 exports.login = catchAsync(async (req, res, next) => {
@@ -53,11 +53,7 @@ exports.login = catchAsync(async (req, res, next) => {
       new AppError('Incorrect account name or email or password', 401)
     );
   // 3) If everything ok, send token to client
-  const token = signToken(account.AccountID);
-  res.status(200).json({
-    status: 'success',
-    token
-  });
+  createSendToken(account, 200, res);
 });
 
 exports.protect = catchAsync(async (req, res, next) => {
@@ -99,6 +95,104 @@ exports.protect = catchAsync(async (req, res, next) => {
   }
 
   // GRANTED ACCESS TO PROTECTED ROUTE
-  req.account = currentAccount;
+  req.Account = currentAccount;
   next();
+});
+
+exports.restrictTo = (...roles) => {
+  return (req, res, next) => {
+    if (!roles.includes(req.Account.Role.RoleName))
+      return next(
+        new AppError('You do not have permission to perform this action', 403)
+      );
+
+    next();
+  };
+};
+
+exports.forgotPassword = catchAsync(async (req, res, next) => {
+  // 1) Get user based on POSTed email
+  const account = await authService.getAccountDetailsService(
+    req.body.AccountName,
+    req.body.Mail
+  );
+  if (!account) {
+    return next(
+      new AppError('There is no account with this email address.', 404)
+    );
+  }
+  // 2) Generate the random reset token
+  const resetToken = authService.createPasswordResetToken(account);
+  // 3) Send it to user's email
+  const resetURL = `${req.protocol}://${req.get(
+    'host'
+  )}/api/v1/accounts/resetPassword/${resetToken}`;
+
+  const message = `Forgot your password? Submit a PATCH request with your new password and passwordConfirm to: ${resetURL}.\nIf you didn't forget your password, please ignore this email!`;
+
+  try {
+    await sendEmail({
+      email: account.Mail,
+      subject: 'Your password reset token (valid for 10 min)',
+      message
+    });
+
+    res.status(200).json({
+      status: 'success',
+      message: 'Token sent to email!'
+    });
+  } catch (err) {
+    account.PasswordResetToken = null;
+    account.PasswordResetExpires = null;
+    authService.updatePasswordResetTokenService(account);
+
+    return next(
+      new AppError('There was an error sending the email. Try again later!'),
+      500
+    );
+  }
+});
+
+exports.resetPassword = catchAsync(async (req, res, next) => {
+  // 1) Get user based on the token
+  const hashedToken = crypto
+    .createHash('sha256')
+    .update(req.params.token)
+    .digest('hex');
+
+  const account = await authService.getAccountByPasswordResetTokenService(
+    hashedToken
+  );
+  // 2) If token has not expired, and there is user, set the new password
+  if (!account) return new AppError('Token is invalid or has expired', 400);
+
+  account.Password = req.body.Password;
+  account.PasswordConfirm = req.body.PasswordConfirm;
+  account.PasswordResetToken = null;
+  account.PasswordResetExpires = null;
+  await authService.resetAccountService(account);
+  // 3) Update changedPasswordAt property for the user
+  // 4) Log the user in, send JWT
+  createSendToken(account, 200, res);
+});
+
+exports.updatePassword = catchAsync(async (req, res, next) => {
+  const account = await authService.getAccountDetailsService(
+    req.Account.AccountName
+  );
+
+  if (
+    !(await authService.correctPassword(
+      req.body.PasswordCurrent,
+      account.Password
+    ))
+  ) {
+    return next(new AppError('Your current password is wrong', 401));
+  }
+
+  account.Password = req.body.Password;
+  account.PasswordConfirm = req.body.PasswordConfirm;
+  await authService.resetAccountService(account);
+
+  createSendToken(account, 200, res);
 });

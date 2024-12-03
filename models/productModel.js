@@ -8,7 +8,17 @@ exports.getProductStats = async () => {
 };
 
 exports.getAllProducts = async reqQuery => {
-  const query = 'SELECT * FROM product';
+  const query = `
+    SELECT
+      p.ProductID,
+      JSON_OBJECT(
+        'ProductCatalogID', pc.ProductCatalogID,
+        'ProductCatalogName', pc.ProductCatalogName
+      ) AS ProductCatalog,
+      p.ProductName, p.DescribeProduct, p.Image, p.Product_Information, p.Quantity, p.Price, p.Sale, p.Hide
+    FROM product AS p
+    JOIN product_catalog AS pc ON p.ProductCatalogID = pc.ProductCatalogID
+  `;
   const features = new APIFeatures(query, reqQuery)
     .filter()
     .sort()
@@ -31,9 +41,21 @@ exports.getAllProducts = async reqQuery => {
 };
 
 exports.getProductById = async id => {
-  const [rows] = await db.query('SELECT * FROM product WHERE ProductID = ?', [
-    id
-  ]);
+  const [rows] = await db.query(
+    `
+    SELECT
+      p.ProductID,
+      JSON_OBJECT(
+        'ProductCatalogID', pc.ProductCatalogID,
+        'ProductCatalogName', pc.ProductCatalogName
+      ) AS ProductCatalog,
+      p.ProductName, p.DescribeProduct, p.Image, p.Product_Information, p.Quantity, p.Price, p.Sale, p.Hide
+    FROM product AS p
+    JOIN product_catalog AS pc ON p.ProductCatalogID = pc.ProductCatalogID
+    WHERE p.ProductID = ?
+    `,
+    [id]
+  );
   return rows[0];
 };
 

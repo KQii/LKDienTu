@@ -14,6 +14,22 @@ router.post(
 );
 router.post('/login', authController.login);
 
+router.post(
+  '/forgotPassword',
+  accountValidator.validateForgotPassword,
+  handleValidationErrors,
+  authController.forgotPassword
+);
+router.patch('/resetPassword/:token', authController.resetPassword);
+
+router.patch('/updateMe', authController.protect, accountController.updateMe);
+
+router.patch(
+  '/updateMyPassword',
+  authController.protect,
+  authController.updatePassword
+);
+
 router
   .route('/')
   .get(accountController.getAllAccounts)

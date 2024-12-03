@@ -18,11 +18,14 @@ router
   .route('/')
   .get(
     authController.protect,
+    authController.restrictTo('Superadmin', 'Admin'),
     productValidator.validateFeatures,
     handleValidationErrors,
     productController.getAllProducts
   )
   .post(
+    authController.protect,
+    authController.restrictTo('Superadmin'),
     productValidator.validateProductCreation,
     handleValidationErrors,
     productController.createProduct
@@ -31,11 +34,15 @@ router
 router
   .route('/:id')
   .get(
+    authController.protect,
+    authController.restrictTo('Superadmin', 'Admin', 'User'),
     productValidator.validateProductId,
     handleValidationErrors,
     productController.getProduct
   )
   .patch(
+    authController.protect,
+    authController.restrictTo('Superadmin', 'Admin'),
     productValidator.validateProductId,
     productValidator.validatePatchProduct,
     handleValidationErrors,
@@ -43,6 +50,7 @@ router
   )
   .delete(
     authController.protect,
+    authController.restrictTo('Superadmin'),
     productValidator.validateProductId,
     handleValidationErrors,
     productController.deleteProduct

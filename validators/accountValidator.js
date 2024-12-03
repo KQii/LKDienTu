@@ -60,6 +60,14 @@ exports.validatePatchAccount = [
   body('Password').optional()
 ];
 
+exports.validateForgotPassword = [
+  body('Mail')
+    .notEmpty()
+    .withMessage('Email is required')
+    .isEmail()
+    .withMessage('Invalid email format')
+];
+
 exports.validateAccountId = [
   param('id')
     .notEmpty()

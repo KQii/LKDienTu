@@ -1,5 +1,5 @@
 const accountModel = require('../models/accountModel');
-const AppError = require('../utils/appError');
+// const AppError = require('../utils/appError');
 
 exports.getAllAccountsService = async () => {
   const allAccounts = await accountModel.getAllAccounts();
