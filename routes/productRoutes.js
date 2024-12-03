@@ -1,4 +1,5 @@
 const express = require('express');
+const authController = require('../controllers/authController');
 const productController = require('../controllers/productController');
 const productValidator = require('../validators/productValidator');
 const handleValidationErrors = require('../validators/handleValidationErrors');
@@ -16,6 +17,7 @@ router.route('/product-stats').get(productController.getProductStats);
 router
   .route('/')
   .get(
+    authController.protect,
     productValidator.validateFeatures,
     handleValidationErrors,
     productController.getAllProducts
@@ -40,6 +42,7 @@ router
     productController.updateProduct
   )
   .delete(
+    authController.protect,
     productValidator.validateProductId,
     handleValidationErrors,
     productController.deleteProduct

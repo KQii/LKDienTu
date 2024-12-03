@@ -11,9 +11,6 @@ exports.getProductStatsService = async () => {
 
 exports.getAllProductsService = async reqQuery => {
   const allProducts = await productModel.getAllProducts(reqQuery);
-  // if (!allProducts) {
-  //   throw new AppError('No product found', 404);
-  // }
   return allProducts;
 };
 
