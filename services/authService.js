@@ -82,8 +82,6 @@ exports.createPasswordResetToken = account => {
     .update(resetToken)
     .digest('hex');
 
-  console.log({ resetToken }, account.PasswordResetToken);
-
   // account.PasswordResetExpires = new Date(Date.now() + 10 * 60 * 1000)
   //   .toISOString()
   //   .slice(0, 19)

@@ -23,7 +23,7 @@ exports.getAccountById = async id => {
   const [rows] = await db.query(
     `
     SELECT
-      a.AccountID, a.AccountName, a.CIC, a.Mail, a.PasswordChangedAt,
+      a.AccountID, a.AccountName, a.CIC, a.Mail,
       JSON_OBJECT(
         'RoleID', r.RoleID,
         'RoleName', r.RoleName

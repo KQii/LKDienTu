@@ -25,6 +25,7 @@ exports.getAllProducts = async reqQuery => {
     .paginate();
   await features.limitFields('product');
 
+  console.log(features.query);
   const [rows] = await db.execute(features.query, features.values);
 
   // Virtual fields
