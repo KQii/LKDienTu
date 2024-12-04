@@ -36,7 +36,6 @@ class APIFeatures {
     const conditions = [];
     const values = [];
     for (const [key, value] of Object.entries(queryObj)) {
-      console.log(value);
       if (Array.isArray(value)) {
         const orConditions = value.map(() => `${key} = ?`).join(' OR ');
         conditions.push(`(${orConditions})`);

@@ -33,7 +33,7 @@ app.use(express.json({ limit: '10kb' }));
 // Data sanitization against XSS
 app.use(xss());
 // Prevent parameter pollution
-app.use(hpp({ whitelist: ['price', 'quantity', 'hide'] }));
+app.use(hpp({ whitelist: ['price', 'quantity', 'hide '] }));
 
 app.use(express.static(`${__dirname}/public`));
 
