@@ -31,3 +31,8 @@ exports.getAccountService = async id => {
   // }
   return account;
 };
+
+exports.updateAccountCICService = async (id, CIC) => {
+  const { updatedAccount } = await accountModel.updateAccountByCIC(id, CIC);
+  return updatedAccount;
+};

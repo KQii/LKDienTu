@@ -115,6 +115,10 @@ exports.updatePasswordResetToken = async data => {
   await db.execute(query, [PasswordResetToken, AccountID]);
 };
 
-exports.updateAccount = async () => {};
+exports.updateAccountByCIC = async (id, CIC) => {
+  const query = `UPDATE account SET CIC = ? WHERE AccountID = ?`;
+  const [result] = await db.execute(query, [CIC, id]);
+  return { result, updatedAccount: this.getAccountById(id) };
+};
 
 exports.deleteAccount = async () => {};

@@ -1,7 +1,9 @@
 const express = require('express');
 const accountController = require('../controllers/accountController');
 const authController = require('../controllers/authController');
+const informationController = require('../controllers/informationController');
 const accountValidator = require('../validators/accountValidator');
+const informationValidator = require('../validators/informationValidator');
 const handleValidationErrors = require('../validators/handleValidationErrors');
 
 const router = express.Router();
@@ -28,6 +30,20 @@ router.patch(
   '/updateMyPassword',
   authController.protect,
   authController.updatePassword
+);
+
+router.post(
+  '/createMyInfo',
+  authController.protect,
+  informationValidator.validateInfoCreation,
+  handleValidationErrors,
+  informationController.createMyInfo
+);
+
+router.patch(
+  '/updateMyInfo',
+  authController.protect,
+  informationController.updateInfo
 );
 
 router

@@ -49,7 +49,7 @@ exports.updateRole = catchAsync(async (req, res, next) => {
   res.status(200).json({
     status: 'success',
     data: {
-      product: updatedRole
+      role: updatedRole
     }
   });
 });
