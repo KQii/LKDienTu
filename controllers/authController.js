@@ -2,6 +2,7 @@ const crypto = require('crypto');
 const { promisify } = require('util');
 const jwt = require('jsonwebtoken');
 const authService = require('../services/authService');
+const accountService = require('../services/accountService');
 const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/appError');
 const sendEmail = require('../utils/email');
@@ -35,7 +36,7 @@ const createSendToken = (account, statusCode, res) => {
 };
 
 exports.signup = catchAsync(async (req, res, next) => {
-  const newAccount = await authService.createAccountService(req.body);
+  const newAccount = await accountService.createAccountService(req.body);
   createSendToken(newAccount, 201, res);
 });
 
@@ -51,7 +52,7 @@ exports.login = catchAsync(async (req, res, next) => {
     return next(new AppError('Please provide missing information!', 400));
   }
   // 2) Check if user exists && password is correct
-  const account = await authService.getAccountDetailsService(
+  const account = await accountService.getAccountDetailsService(
     accountName,
     email
   );
@@ -85,7 +86,7 @@ exports.protect = catchAsync(async (req, res, next) => {
   const decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET);
 
   // 3) Check if user still exists
-  const currentAccount = await authService.getAccountService(decoded.id);
+  const currentAccount = await accountService.getAccountService(decoded.id);
   if (!currentAccount) {
     return next(
       new AppError(
@@ -122,7 +123,7 @@ exports.restrictTo = (...roles) => {
 
 exports.forgotPassword = catchAsync(async (req, res, next) => {
   // 1) Get user based on POSTed email
-  const account = await authService.getAccountDetailsService(
+  const account = await accountService.getAccountDetailsService(
     req.body.AccountName,
     req.body.Mail
   );
@@ -187,7 +188,7 @@ exports.resetPassword = catchAsync(async (req, res, next) => {
 });
 
 exports.updatePassword = catchAsync(async (req, res, next) => {
-  const account = await authService.getAccountDetailsService(
+  const account = await accountService.getAccountDetailsService(
     req.Account.AccountName
   );
 

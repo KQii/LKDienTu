@@ -3,15 +3,6 @@ const bcrypt = require('bcryptjs');
 
 const accountModel = require('../models/accountModel');
 const AppError = require('../utils/appError');
-// const AppError = require('../utils/appError');
-
-exports.createAccountService = async accountData => {
-  accountData.Password = await bcrypt.hash(accountData.Password, 12);
-  accountData.PasswordConfirm = null;
-
-  const result = await accountModel.createAccount(accountData);
-  return result;
-};
 
 exports.resetAccountService = async accountData => {
   if (accountData.Password !== accountData.PasswordConfirm) {
@@ -22,23 +13,6 @@ exports.resetAccountService = async accountData => {
   accountData.PasswordConfirm = null;
 
   await accountModel.updateAccountPassword(accountData);
-};
-
-exports.getAccountService = async id => {
-  const account = await accountModel.getAccountById(id);
-  // if (!account) {
-  //   throw new AppError(`Account with ID ${id} not found`, 404);
-  // }
-  return account;
-};
-
-exports.getAccountDetailsService = async (accountName, email) => {
-  const account = await accountModel.getAccountByAccountNameOrMail(
-    accountName,
-    email
-  );
-
-  return account;
 };
 
 exports.updateAccountByIdService = async (accountID, filteredBody) => {
@@ -82,10 +56,6 @@ exports.createPasswordResetToken = account => {
     .update(resetToken)
     .digest('hex');
 
-  // account.PasswordResetExpires = new Date(Date.now() + 10 * 60 * 1000)
-  //   .toISOString()
-  //   .slice(0, 19)
-  //   .replace('T', ' ');
   this.updatePasswordResetTokenService(account);
 
   return resetToken;

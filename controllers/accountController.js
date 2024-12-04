@@ -50,10 +50,4 @@ exports.updateMe = catchAsync(async (req, res, next) => {
 
 exports.deleteMe = catchAsync(async (req, res, next) => {});
 
-exports.getAccount = catchAsync(async (req, res, next) => {});
-
 exports.createAccount = catchAsync(async (req, res, next) => {});
-
-exports.updateAccount = catchAsync(async (req, res, next) => {});
-
-exports.deleteAccount = catchAsync(async (req, res, next) => {});

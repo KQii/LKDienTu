@@ -33,11 +33,11 @@ router.patch(
 router
   .route('/')
   .get(accountController.getAllAccounts)
-  .post(
-    accountValidator.validateAccountCreation,
-    handleValidationErrors,
-    accountController.createAccount
-  );
+  .post
+  // accountValidator.validateAccountCreation,
+  // handleValidationErrors,
+  // accountController.createAccount
+  ();
 
 router
   .route('/:id')
