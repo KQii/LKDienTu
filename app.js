@@ -10,6 +10,7 @@ const globalErrorHandler = require('./controllers/errorController');
 const productRouter = require('./routes/productRoutes');
 const accountRouter = require('./routes/accountRoutes');
 const roleRouter = require('./routes/roleRoutes');
+const productCatalogRouter = require('./routes/productCatalogRoutes');
 
 const app = express();
 
@@ -47,6 +48,7 @@ app.use((req, res, next) => {
 app.use('/api/v1/products', productRouter);
 app.use('/api/v1/accounts', accountRouter);
 app.use('/api/v1/roles', roleRouter);
+app.use('/api/v1/productCatalogs', productCatalogRouter);
 
 app.all('*', (req, res, next) => {
   next(new AppError(`Can't find ${req.originalUrl} on this server`, 404));
