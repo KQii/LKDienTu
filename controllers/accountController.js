@@ -24,6 +24,26 @@ exports.getAllAccounts = catchAsync(async (req, res, next) => {
   });
 });
 
+exports.getAccount = catchAsync(async (req, res, next) => {
+  const account = await accountService.getAccountService(req.params.id);
+
+  res.status(200).json({
+    status: 'success',
+    data: {
+      account
+    }
+  });
+});
+
+exports.deleteAccount = catchAsync(async (req, res, next) => {
+  await accountService.deleteAccountService(req.params.id);
+
+  res.status(204).json({
+    status: 'success',
+    data: null
+  });
+});
+
 exports.updateMe = catchAsync(async (req, res, next) => {
   if (req.body.Password || req.body.PasswordConfirm) {
     return next(
@@ -48,6 +68,31 @@ exports.updateMe = catchAsync(async (req, res, next) => {
   });
 });
 
-exports.deleteMe = catchAsync(async (req, res, next) => {});
+exports.createAccount = catchAsync(async (req, res, next) => {
+  const newAccount = await accountService.createNewAccountSuperAdminService(
+    req.body
+  );
 
-exports.createAccount = catchAsync(async (req, res, next) => {});
+  res.status(201).json({
+    status: 'success',
+    data: {
+      account: newAccount
+    }
+  });
+});
+
+exports.updateAccount = catchAsync(async (req, res, next) => {
+  const updatedAccount = await accountService.updateAccountSuperadminService(
+    req.params.id,
+    req.body
+  );
+
+  res.status(200).json({
+    status: 'success',
+    data: {
+      account: updatedAccount
+    }
+  });
+});
+
+exports.deleteMe = catchAsync(async (req, res, next) => {});

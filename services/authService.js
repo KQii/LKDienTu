@@ -2,16 +2,13 @@ const crypto = require('crypto');
 const bcrypt = require('bcryptjs');
 
 const accountModel = require('../models/accountModel');
-const AppError = require('../utils/appError');
+// const AppError = require('../utils/appError');
 
 exports.resetAccountService = async accountData => {
-  if (accountData.Password !== accountData.PasswordConfirm) {
-    throw new AppError('Password confirmation does not match password', 400);
-  }
-
   accountData.Password = await bcrypt.hash(accountData.Password, 12);
   accountData.PasswordConfirm = null;
 
+  console.log(accountData.Password);
   await accountModel.updateAccountPassword(accountData);
 };
 

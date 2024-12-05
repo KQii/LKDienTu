@@ -63,6 +63,8 @@ exports.login = catchAsync(async (req, res, next) => {
     return next(
       new AppError('Incorrect account name or email or password', 401)
     );
+
+  delete account.Password;
   // 3) If everything ok, send token to client
   createSendToken(account, 200, res);
 });
@@ -191,7 +193,7 @@ exports.updatePassword = catchAsync(async (req, res, next) => {
   const account = await accountService.getAccountDetailsService(
     req.Account.AccountName
   );
-
+  console.log('updatePassword', account);
   if (
     !(await authService.correctPassword(
       req.body.PasswordCurrent,
@@ -201,6 +203,11 @@ exports.updatePassword = catchAsync(async (req, res, next) => {
     return next(new AppError('Your current password is wrong', 401));
   }
 
+  if (account.Password !== account.PasswordConfirm) {
+    return next(
+      new AppError('Password confirmation does not match password', 400)
+    );
+  }
   account.Password = req.body.Password;
   account.PasswordConfirm = req.body.PasswordConfirm;
   await authService.resetAccountService(account);

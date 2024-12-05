@@ -48,30 +48,35 @@ router.patch(
 
 router
   .route('/')
-  .get(accountController.getAllAccounts)
-  .post
-  // accountValidator.validateAccountCreation,
-  // handleValidationErrors,
-  // accountController.createAccount
-  ();
+  .get(
+    authController.protect,
+    authController.restrictTo('Superadmin'),
+    accountController.getAllAccounts
+  )
+  .post(
+    authController.protect,
+    accountValidator.validateAccountCreation,
+    handleValidationErrors,
+    accountController.createAccount
+  );
 
 router
   .route('/:id')
-  .get
-  // accountValidator.validateAccountId,
-  // handleValidationErrors.validateAccountId,
-  // accountController.getAccount
-  ()
-  .patch
-  // accountValidator.validateAccountId,
-  // accountValidator.validatePatchAccount,
-  // handleValidationErrors,
-  // accountController.updateAccount
-  ()
-  .delete
-  // accountValidator.validateAccountId,
-  // handleValidationErrors,
-  // accountController.deleteAccount
-  ();
+  .get(
+    accountValidator.validateAccountId,
+    handleValidationErrors,
+    accountController.getAccount
+  )
+  .patch(
+    accountValidator.validateAccountId,
+    accountValidator.validatePatchAccount,
+    handleValidationErrors,
+    accountController.updateAccount
+  )
+  .delete(
+    accountValidator.validateAccountId,
+    handleValidationErrors,
+    accountController.deleteAccount
+  );
 
 module.exports = router;

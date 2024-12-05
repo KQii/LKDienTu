@@ -4,19 +4,16 @@ exports.getAllAccounts = async () => {
   const [rows] = await db.query(
     `
     SELECT
-      account.AccountID, account.AccountName, account.CIC, account.Mail, account.PasswordChangedAt,
-      roles.*
-    FROM account
-    JOIN roles ON account.RoleID = roles.RoleID
+      a.AccountID, a.AccountName, a.CIC, a.Mail,
+      JSON_OBJECT(
+        'RoleID', r.RoleID,
+        'RoleName', r.RoleName
+      ) AS Role
+    FROM account AS a
+    JOIN roles AS r ON a.RoleID = r.RoleID
     `
   );
-  const result = rows.map(account => {
-    account.Role = { RoleID: account.RoleID, RoleName: account.RoleName };
-    delete account.RoleID;
-    delete account.RoleName;
-    return account;
-  });
-  return result;
+  return rows;
 };
 
 exports.getAccountById = async id => {
@@ -39,8 +36,23 @@ exports.getAccountById = async id => {
 
 exports.getAccountByAccountNameOrMail = async (accountName, email) => {
   const values = [accountName, email];
+  console.log(values);
+  // const [rows] = await db.query(
+  //   'SELECT * FROM account WHERE AccountName = ? OR Mail = ?',
+  //   values
+  // );
   const [rows] = await db.query(
-    'SELECT * FROM account WHERE AccountName = ? OR Mail = ?',
+    `
+    SELECT
+      a.AccountID, a.AccountName, a.CIC, a.Password, a.Mail,
+      JSON_OBJECT(
+        'RoleID', r.RoleID,
+        'RoleName', r.RoleName
+      ) AS Role
+    FROM account AS a
+    JOIN roles AS r ON a.RoleID = r.RoleID
+    WHERE a.AccountName = ? OR a.Mail = ?
+    `,
     values
   );
   return rows[0];
@@ -78,34 +90,48 @@ exports.getAccountByPasswordResetToken = async passwordResetToken => {
 };
 
 exports.createAccount = async data => {
-  const { AccountName, Password, Mail } = data;
+  const { AccountName, Password, Mail, RoleID } = data;
 
   const query = `
     INSERT INTO account (AccountName, Password, Mail)
     VALUES (?, ?, ?)
   `;
 
-  const [result] = await db.execute(query, [AccountName, Password, Mail]);
+  const [result] = await db.execute(query, [
+    AccountName,
+    Password,
+    Mail,
+    RoleID
+  ]);
+  return this.getAccountById(result.insertId);
+};
+
+exports.createAccountSuperadmin = async data => {
+  const { AccountName, Password, Mail, RoleID } = data;
+
+  const query = `
+    INSERT INTO account (AccountName, Password, Mail, RoleID)
+    VALUES (?, ?, ?, ?)
+  `;
+
+  const [result] = await db.execute(query, [
+    AccountName,
+    Password,
+    Mail,
+    RoleID
+  ]);
   return this.getAccountById(result.insertId);
 };
 
 exports.updateAccountPassword = async data => {
-  const {
-    AccountID,
-    Password,
-    PasswordResetToken,
-    PasswordResetExpires
-  } = data;
+  const { AccountID, Password } = data;
+
+  console.log(AccountID, Password);
 
   const query = `
-    UPDATE account SET Password = ?, PasswordResetToken = ?, PasswordResetExpires = ?, PasswordChangedAt = NOW() WHERE AccountID = ?
+    UPDATE account SET Password = ?, PasswordResetToken = null, PasswordResetExpires = null, PasswordChangedAt = NOW() WHERE AccountID = ?
   `;
-  await db.execute(query, [
-    Password,
-    PasswordResetToken,
-    PasswordResetExpires,
-    AccountID
-  ]);
+  await db.execute(query, [Password, AccountID]);
 };
 
 exports.updatePasswordResetToken = async data => {
@@ -121,4 +147,10 @@ exports.updateAccountByCIC = async (id, CIC) => {
   return { result, updatedAccount: this.getAccountById(id) };
 };
 
-exports.deleteAccount = async () => {};
+exports.deleteAccountById = async id => {
+  const [rows] = await db.query('DELETE FROM account WHERE AccountID = ?', [
+    id
+  ]);
+
+  return rows;
+};
