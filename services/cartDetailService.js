@@ -2,9 +2,9 @@ const cartDetailModel = require('../models/cartDetailModel');
 const productModel = require('../models/productModel');
 const AppError = require('../utils/appError');
 
-exports.getAllCartDetailsService = async () => {
-  const allCartDetails = await cartDetailModel.getAllCartDetails();
-  return allCartDetails;
+exports.getmyCartDetailsService = async () => {
+  const myCartDetails = await cartDetailModel.getmyCartDetails();
+  return myCartDetails;
 };
 
 exports.getCartDetailService = async cartDetailId => {
@@ -48,4 +48,12 @@ exports.updateCartDetailService = async (cartDetailId, cartDetailData) => {
     cartDetailData
   );
   return updatedCartDetail;
+};
+
+exports.getMyCartService = async accountId => {
+  const myCartDetails = await cartDetailModel.getMyCartDetails(accountId);
+  if (!myCartDetails) {
+    throw new AppError(`Cart empty`, 404);
+  }
+  return myCartDetails;
 };

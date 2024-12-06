@@ -5,6 +5,14 @@ const cartDetailController = require('../controllers/cartDetailController');
 const router = express.Router();
 
 router
+  .route('/myCart')
+  .get(
+    authController.protect,
+    authController.restrictTo('User'),
+    cartDetailController.getMyCart
+  );
+
+router
   .route('/')
   .get(
     authController.protect,

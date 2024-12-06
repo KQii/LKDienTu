@@ -64,3 +64,18 @@ exports.updateCartDetail = catchAsync(async (req, res, next) => {
     }
   });
 });
+
+exports.getMyCart = catchAsync(async (req, res, next) => {
+  const cartDetails = await cartDetailService.getMyCartService(
+    req.Account.AccountID
+  );
+
+  // SEND RESPONSE
+  res.status(200).json({
+    status: 'success',
+    results: cartDetails.length,
+    data: {
+      cartDetails
+    }
+  });
+});

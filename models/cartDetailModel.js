@@ -1,5 +1,4 @@
 const db = require('../database');
-const AppError = require('../utils/appError');
 
 exports.getAllCartDetails = async () => {
   const [rows] = await db.query(`
@@ -72,4 +71,25 @@ exports.updateCartDetailById = async (id, data) => {
     [data.OrderedNumber, id]
   );
   return { result, updatedCartDetail: this.getCartDetailById(id) };
+};
+
+exports.getMyCartDetails = async accountId => {
+  const [rows] = await db.query(
+    `
+    SELECT
+      c.CartDetailID, c.OrderedNumber,
+        JSON_OBJECT(
+        'ProductID', p.ProductID,
+            'ProductName', p.ProductName,
+            'Price', p.Price
+        ) AS Product
+    FROM cart_detail AS c
+    JOIN account AS a ON c.AccountID = a.AccountID
+    JOIN product AS p ON c.ProductID = p.ProductID
+    WHERE c.AccountID = ?
+  `,
+    [accountId]
+  );
+
+  return rows;
 };
