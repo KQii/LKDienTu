@@ -56,7 +56,7 @@ app.use('/api/v1/productCatalogs', productCatalogRouter);
 app.use('/api/v1/info', informationRouter);
 app.use('/api/v1/cartDetails', cartDetailRouter);
 app.use('/api/v1/invoices', invoiceRouter);
-// app.use('/api/v1/invoiceDetails', invoiceDetailRouter);
+app.use('/api/v1/invoiceDetails', invoiceDetailRouter);
 
 app.all('*', (req, res, next) => {
   next(new AppError(`Can't find ${req.originalUrl} on this server`, 404));

@@ -10,13 +10,18 @@ router
     authController.protect,
     authController.restrictTo('User'),
     cartDetailController.getMyCart
+  )
+  .patch(
+    authController.protect,
+    authController.restrictTo('User'),
+    cartDetailController.updateMyCart
   );
 
 router
   .route('/')
   .get(
     authController.protect,
-    authController.restrictTo('Admin'),
+    authController.restrictTo('Superadmin', 'Admin'),
     cartDetailController.getAllCartDetails
   )
   .post(

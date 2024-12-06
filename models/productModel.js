@@ -141,3 +141,12 @@ exports.checkUpdateProductAvailable = async (productID, orderedNumber) => {
 
   return rows[0];
 };
+
+exports.updateStockQuantityAfterPurchased = async (
+  productID,
+  orderedNumber
+) => {
+  const query = `UPDATE product SET Quantity = Quantity - ? WHERE ProductID = ?`;
+
+  await db.execute(query, [orderedNumber, productID]);
+};

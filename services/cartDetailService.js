@@ -2,8 +2,8 @@ const cartDetailModel = require('../models/cartDetailModel');
 const productModel = require('../models/productModel');
 const AppError = require('../utils/appError');
 
-exports.getmyCartDetailsService = async () => {
-  const myCartDetails = await cartDetailModel.getmyCartDetails();
+exports.getAllCartDetailsService = async () => {
+  const myCartDetails = await cartDetailModel.getAllCartDetails();
   return myCartDetails;
 };
 
@@ -29,7 +29,10 @@ exports.createCartDetailService = async cartDetailData => {
     cartDetailData.OrderedNumber
   );
   if (!available)
-    throw new AppError('Ordered quantity exceeds available stock.', 422);
+    throw new AppError(
+      `Ordered quantity of Product with ID ${cartDetailData.ProductID} exceeds available stock.`,
+      422
+    );
 
   const result = await cartDetailModel.createCartDetail(cartDetailData);
   return result;
@@ -41,7 +44,10 @@ exports.updateCartDetailService = async (cartDetailId, cartDetailData) => {
     cartDetailData.OrderedNumber
   );
   if (!available)
-    throw new AppError('Ordered quantity exceeds available stock.', 422);
+    throw new AppError(
+      `Ordered quantity of Product with ID ${cartDetailData.ProductID} exceeds available stock.`,
+      422
+    );
 
   const { updatedCartDetail } = await cartDetailModel.updateCartDetailById(
     cartDetailId,
@@ -56,4 +62,24 @@ exports.getMyCartService = async accountId => {
     throw new AppError(`Cart empty`, 404);
   }
   return myCartDetails;
+};
+
+exports.updateMyCartDetailService = async (accountId, cartDetailData) => {
+  const available = await productModel.checkUpdateProductAvailable(
+    cartDetailData.ProductID,
+    cartDetailData.OrderedNumber
+  );
+  if (!available)
+    throw new AppError(
+      `Ordered quantity of Product with ID ${cartDetailData.ProductID} exceeds available stock.`,
+      422
+    );
+
+  const {
+    updatedCartDetail
+  } = await cartDetailModel.updateCartDetailByAccountId(
+    accountId,
+    cartDetailData
+  );
+  return updatedCartDetail;
 };

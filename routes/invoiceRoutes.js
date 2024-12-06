@@ -5,11 +5,24 @@ const invoiceController = require('../controllers/invoiceController');
 const router = express.Router();
 
 router
+  .route('/myInvoices')
+  .get(
+    authController.protect,
+    authController.restrictTo('User'),
+    invoiceController.getMyInvoices
+  );
+
+router
   .route('/')
   .get(
     authController.protect,
     authController.restrictTo('Superadmin', 'Admin'),
     invoiceController.getAllInvoices
+  )
+  .post(
+    authController.protect,
+    authController.restrictTo('User'),
+    invoiceController.createInvoice
   );
 
 router

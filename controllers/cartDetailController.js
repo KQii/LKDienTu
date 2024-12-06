@@ -79,3 +79,17 @@ exports.getMyCart = catchAsync(async (req, res, next) => {
     }
   });
 });
+
+exports.updateMyCart = catchAsync(async (req, res, next) => {
+  const updatedCartDetail = await cartDetailService.updateMyCartDetailService(
+    req.Account.AccountID,
+    req.body
+  );
+
+  res.status(200).json({
+    status: 'success',
+    data: {
+      cartDetail: updatedCartDetail
+    }
+  });
+});

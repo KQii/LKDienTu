@@ -39,6 +39,27 @@ exports.getCartDetailById = async id => {
   return rows[0];
 };
 
+exports.getCartDetailByAccountIdAndProductId = async (id, productId) => {
+  const [rows] = await db.query(
+    `
+    SELECT
+      c.CartDetailID, c.OrderedNumber,
+        a.AccountID,
+        JSON_OBJECT(
+        'ProductID', p.ProductID,
+            'ProductName', p.ProductName,
+            'Price', p.Price
+        ) AS Product
+    FROM cart_detail AS c
+    JOIN account AS a ON c.AccountID = a.AccountID
+    JOIN product AS p ON c.ProductID = p.ProductID
+    WHERE c.AccountID = ? AND c.ProductID = ?
+    `,
+    [id, productId]
+  );
+  return rows[0];
+};
+
 exports.deleteCartDetailById = async id => {
   const [
     rows
@@ -92,4 +113,32 @@ exports.getMyCartDetails = async accountId => {
   );
 
   return rows;
+};
+
+exports.updateCartDetailByAccountId = async (accountId, data) => {
+  const [
+    result
+  ] = await db.execute(
+    'UPDATE cart_detail SET OrderedNumber = ? WHERE AccountID = ? AND ProductID = ?',
+    [data.OrderedNumber, accountId, data.ProductID]
+  );
+  return {
+    result,
+    updatedCartDetail: this.getCartDetailByAccountIdAndProductId(
+      accountId,
+      data.ProductID
+    )
+  };
+};
+
+exports.updateOrderedNumberAfterPurchased = async (
+  accountId,
+  productId,
+  orderedNumber
+) => {
+  const query = `
+    UPDATE cart_detail SET OrderedNumber = OrderedNumber - ?
+    WHERE AccountID = ? AND ProductID = ?
+  `;
+  await db.execute(query, [orderedNumber, accountId, productId]);
 };
