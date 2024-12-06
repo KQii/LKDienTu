@@ -107,3 +107,37 @@ exports.deleteProductById = async id => {
 
   return rows;
 };
+
+exports.checkCreateProductAvailable = async (
+  accountID,
+  productID,
+  orderedNumber
+) => {
+  const [res] = await db.query(
+    `
+    SELECT OrderedNumber FROM cart_detail WHERE AccountID = ? AND ProductID = ?
+    `,
+    [accountID, productID]
+  );
+  const cartOrderedNumber = res.length > 0 ? res[0].OrderedNumber : 0;
+
+  const [
+    rows
+  ] = await db.query(
+    'SELECT * FROM product WHERE ProductID = ? AND Quantity >= ?',
+    [productID, cartOrderedNumber + orderedNumber]
+  );
+
+  return rows[0];
+};
+
+exports.checkUpdateProductAvailable = async (productID, orderedNumber) => {
+  const [
+    rows
+  ] = await db.query(
+    'SELECT * FROM product WHERE ProductID = ? AND Quantity >= ?',
+    [productID, orderedNumber]
+  );
+
+  return rows[0];
+};

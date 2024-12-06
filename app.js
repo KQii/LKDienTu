@@ -12,6 +12,7 @@ const accountRouter = require('./routes/accountRoutes');
 const roleRouter = require('./routes/roleRoutes');
 const productCatalogRouter = require('./routes/productCatalogRoutes');
 const informationRouter = require('./routes/informationRoutes');
+const cartDetailRouter = require('./routes/cartDetailRoutes');
 
 const app = express();
 
@@ -51,6 +52,7 @@ app.use('/api/v1/accounts', accountRouter);
 app.use('/api/v1/roles', roleRouter);
 app.use('/api/v1/productCatalogs', productCatalogRouter);
 app.use('/api/v1/info', informationRouter);
+app.use('/api/v1/cartDetails', cartDetailRouter);
 
 app.all('*', (req, res, next) => {
   next(new AppError(`Can't find ${req.originalUrl} on this server`, 404));

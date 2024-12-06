@@ -36,7 +36,7 @@ exports.getAccountById = async id => {
 
 exports.getAccountByAccountNameOrMail = async (accountName, email) => {
   const values = [accountName, email];
-  console.log(values);
+  // console.log(values);
   // const [rows] = await db.query(
   //   'SELECT * FROM account WHERE AccountName = ? OR Mail = ?',
   //   values

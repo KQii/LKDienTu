@@ -86,6 +86,7 @@ exports.protect = catchAsync(async (req, res, next) => {
   }
   // 2) Verification token
   const decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET);
+  console.log(decoded);
 
   // 3) Check if user still exists
   const currentAccount = await accountService.getAccountService(decoded.id);
@@ -190,6 +191,7 @@ exports.resetPassword = catchAsync(async (req, res, next) => {
 });
 
 exports.updatePassword = catchAsync(async (req, res, next) => {
+  console.log(req.Account);
   const account = await accountService.getAccountDetailsService(
     req.Account.AccountName
   );
