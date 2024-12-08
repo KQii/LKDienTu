@@ -55,6 +55,7 @@ router
   )
   .post(
     authController.protect,
+    authController.restrictTo('Superadmin'),
     accountValidator.validateAccountCreation,
     handleValidationErrors,
     accountController.createAccount
@@ -63,17 +64,23 @@ router
 router
   .route('/:id')
   .get(
+    authController.protect,
+    authController.restrictTo('Superadmin'),
     accountValidator.validateAccountId,
     handleValidationErrors,
     accountController.getAccount
   )
   .patch(
+    authController.protect,
+    authController.restrictTo('Superadmin'),
     accountValidator.validateAccountId,
     accountValidator.validatePatchAccount,
     handleValidationErrors,
     accountController.updateAccount
   )
   .delete(
+    authController.protect,
+    authController.restrictTo('Superadmin'),
     accountValidator.validateAccountId,
     handleValidationErrors,
     accountController.deleteAccount

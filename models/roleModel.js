@@ -11,6 +11,13 @@ exports.getRoleById = async id => {
   return rows[0];
 };
 
+exports.getRoleByRoleName = async roleName => {
+  const [rows] = await db.query('SELECT * FROM roles WHERE RoleName = ?', [
+    roleName
+  ]);
+  return rows[0];
+};
+
 exports.createRole = async data => {
   const query = `INSERT INTO roles (RoleName) VALUES (?)`;
   const [result] = await db.execute(query, [data.RoleName]);

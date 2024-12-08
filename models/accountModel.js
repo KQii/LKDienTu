@@ -34,6 +34,18 @@ exports.getAccountById = async id => {
   return rows[0];
 };
 
+exports.getAccountByAccountName = async accountName => {
+  const [rows] = await db.query(`SELECT * FROM account WHERE AccountName = ?`, [
+    accountName
+  ]);
+  return rows[0];
+};
+
+exports.getAccountByMail = async mail => {
+  const [rows] = await db.query(`SELECT * FROM account WHERE Mail = ?`, [mail]);
+  return rows[0];
+};
+
 exports.getAccountByAccountNameOrMail = async (accountName, email) => {
   const values = [accountName, email];
   // console.log(values);

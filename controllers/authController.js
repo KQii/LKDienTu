@@ -89,7 +89,7 @@ exports.protect = catchAsync(async (req, res, next) => {
   console.log(decoded);
 
   // 3) Check if user still exists
-  const currentAccount = await accountService.getAccountService(decoded.id);
+  const currentAccount = await accountService.getAccountByIdService(decoded.id);
   if (!currentAccount) {
     return next(
       new AppError(

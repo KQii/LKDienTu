@@ -25,7 +25,13 @@ exports.getAllAccounts = catchAsync(async (req, res, next) => {
 });
 
 exports.getAccount = catchAsync(async (req, res, next) => {
-  const account = await accountService.getAccountService(req.params.id);
+  const account = await accountService.getAccountByIdService(req.params.id);
+
+  if (!account) {
+    return next(
+      new AppError(`Account with ID ${req.params.id} not found`, 404)
+    );
+  }
 
   res.status(200).json({
     status: 'success',
@@ -69,6 +75,22 @@ exports.updateMe = catchAsync(async (req, res, next) => {
 });
 
 exports.createAccount = catchAsync(async (req, res, next) => {
+  const accountNameExists = await accountService.getAccountByAccountNameService(
+    req.body
+  );
+  if (accountNameExists) {
+    return next(
+      new AppError('This account name has been used. Please use another name')
+    );
+  }
+
+  const mailExists = await accountService.getAccountByMailService(req.body);
+  if (mailExists) {
+    return next(
+      new AppError('This email has been used. Please use another email')
+    );
+  }
+
   const newAccount = await accountService.createNewAccountSuperAdminService(
     req.body
   );
@@ -82,6 +104,13 @@ exports.createAccount = catchAsync(async (req, res, next) => {
 });
 
 exports.updateAccount = catchAsync(async (req, res, next) => {
+  const accountIdExists = await accountService.getAccountByIdService(
+    req.params.id
+  );
+  if (!accountIdExists) {
+    return next(new AppError(`Account with ID ${req.params.id} not found`));
+  }
+
   const updatedAccount = await accountService.updateAccountSuperadminService(
     req.params.id,
     req.body

@@ -13,9 +13,11 @@ exports.createNewRoleService = async roleData => {
 
 exports.getRoleService = async roleId => {
   const role = await roleModel.getRoleById(roleId);
-  if (!role) {
-    throw new AppError(`Role with ID ${roleId} not found`, 404);
-  }
+  return role;
+};
+
+exports.getRoleByRoleNameService = async roleData => {
+  const role = await roleModel.getRoleByRoleName(roleData.RoleName);
   return role;
 };
 
