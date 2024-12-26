@@ -1,5 +1,6 @@
 const productService = require('../services/productService');
 const catchAsync = require('../utils/catchAsync');
+const AppError = require('../utils/appError');
 
 exports.aliasTopProducts = (req, res, next) => {
   req.query.limit = 5;
@@ -44,6 +45,19 @@ exports.getProduct = catchAsync(async (req, res, next) => {
 });
 
 exports.createProduct = catchAsync(async (req, res, next) => {
+  const productExists = await productService.getProductByProductNameService(
+    req.body
+  );
+
+  if (productExists) {
+    return next(
+      new AppError(
+        'This product name has been used. Please use another name',
+        400
+      )
+    );
+  }
+
   const newProduct = await productService.createNewProductService(req.body);
 
   res.status(201).json({
@@ -55,10 +69,29 @@ exports.createProduct = catchAsync(async (req, res, next) => {
 });
 
 exports.updateProduct = catchAsync(async (req, res, next) => {
-  // const tour = await Tour.findByIdAndUpdate(req.params.id, req.body, {
-  //   new: true,
-  //   runValidators: true
-  // });
+  const productIdExists = await productService.getProductByIdService(
+    req.params.id
+  );
+  if (!productIdExists) {
+    return next(
+      new AppError(`Product with ID ${req.params.id} not found`, 400)
+    );
+  }
+
+  const productExists = await productService.getOtherProductByProductNameService(
+    req.params.id,
+    req.body
+  );
+
+  if (productExists) {
+    return next(
+      new AppError(
+        'This product name has been used. Please use another name',
+        400
+      )
+    );
+  }
+
   const updatedProduct = await productService.updateProductService(
     req.params.id,
     req.body

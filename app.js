@@ -4,6 +4,7 @@ const rateLimit = require('express-rate-limit');
 const helmet = require('helmet');
 const xss = require('xss-clean');
 const hpp = require('hpp');
+const cors = require('cors');
 
 const AppError = require('./utils/appError');
 const globalErrorHandler = require('./controllers/errorController');
@@ -17,6 +18,8 @@ const invoiceRouter = require('./routes/invoiceRoutes');
 const invoiceDetailRouter = require('./routes/invoiceDetailRoutes');
 
 const app = express();
+
+app.use(cors());
 
 // Set security HTTP headers
 app.use(helmet());

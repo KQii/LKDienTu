@@ -80,14 +80,17 @@ exports.createAccount = catchAsync(async (req, res, next) => {
   );
   if (accountNameExists) {
     return next(
-      new AppError('This account name has been used. Please use another name')
+      new AppError(
+        'This account name has been used. Please use another name',
+        400
+      )
     );
   }
 
   const mailExists = await accountService.getAccountByMailService(req.body);
   if (mailExists) {
     return next(
-      new AppError('This email has been used. Please use another email')
+      new AppError('This email has been used. Please use another email', 400)
     );
   }
 
@@ -108,7 +111,9 @@ exports.updateAccount = catchAsync(async (req, res, next) => {
     req.params.id
   );
   if (!accountIdExists) {
-    return next(new AppError(`Account with ID ${req.params.id} not found`));
+    return next(
+      new AppError(`Account with ID ${req.params.id} not found`, 400)
+    );
   }
 
   const updatedAccount = await accountService.updateAccountSuperadminService(

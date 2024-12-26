@@ -1,5 +1,3 @@
-const db = require('../database');
-
 const queryString = (operator, fieldName) => {
   switch (operator) {
     case 'gte':
@@ -13,12 +11,6 @@ const queryString = (operator, fieldName) => {
     default:
       break;
   }
-};
-
-const getColumns = async (tableName, excludedFields) => {
-  const [rows] = await db.query(`SHOW COLUMNS FROM ${tableName}`);
-  const columns = rows.map(row => row.Field);
-  return columns.filter(col => !excludedFields.includes(col)).join(', ');
 };
 
 class APIFeatures {
@@ -81,18 +73,49 @@ class APIFeatures {
     return this;
   }
 
-  async limitFields(tableName) {
+  async limitFields() {
     if (this.queryStr.fields) {
-      const { fields } = this.queryStr;
+      const query = `
+      p.ProductID,
+      JSON_OBJECT(
+        'ProductCatalogID', pc.ProductCatalogID,
+        'ProductCatalogName', pc.ProductCatalogName
+      ) AS ProductCatalog,
+      p.ProductName, p.DescribeProduct, p.Image, p.Product_Information, p.Quantity, p.Price, p.Sale, p.Hide
+      `.trim();
+      let { fields } = this.queryStr;
+      console.log(fields);
 
-      if (fields.includes('-')) {
-        const excludedFields = fields.split(',').map(el => el.slice(1));
+      if (fields[0] === '-') {
+        if (fields.includes('ProductCatalog')) {
+          this.query = this.query.replace(
+            `,
+      JSON_OBJECT(
+        'ProductCatalogID', pc.ProductCatalogID,
+        'ProductCatalogName', pc.ProductCatalogName
+      ) AS ProductCatalog`,
+            ''
+          );
+        }
+        console.log('Test', this.query);
 
-        const selectedFields = await getColumns(tableName, excludedFields);
-        this.query = this.query.replace('*', selectedFields);
+        fields
+          .split(',')
+          .map(el => el.slice(1))
+          .forEach(el => {
+            this.query = this.query.replace(`, p.${el}`, '');
+          });
+      } else {
+        if (fields.includes('ProductCatalog')) {
+          fields = fields.slice(0, fields.indexOf('ProductCatalog') - 1);
+          fields += `,JSON_OBJECT(
+                  'ProductCatalogID', pc.ProductCatalogID,
+                  'ProductCatalogName', pc.ProductCatalogName
+                ) AS ProductCatalog`;
+        }
+
+        this.query = this.query.replace(query, fields);
       }
-
-      this.query = this.query.replace('*', fields);
     }
     return this;
   }

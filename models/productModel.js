@@ -19,22 +19,40 @@ exports.getAllProducts = async reqQuery => {
     FROM product AS p
     JOIN product_catalog AS pc ON p.ProductCatalogID = pc.ProductCatalogID
   `;
+  // const query = `
+  //   SELECT *
+  //   FROM product AS p
+  //   JOIN product_catalog AS pc ON p.ProductCatalogID = pc.ProductCatalogID
+  // `;
+
   const features = new APIFeatures(query, reqQuery)
     .filter()
     .sort()
     .paginate();
-  await features.limitFields('product');
+  await features.limitFields();
 
+  // console.log(features.query);
   const [rows] = await db.execute(features.query, features.values);
+
+  // const finalRows = rows.map(
+  //   ({ ProductCatalogID, ProductCatalogName, ParentID, ...rest }) => ({
+  //     ...rest,
+  //     ProductCatalog: {
+  //       ProductCatalogID,
+  //       ProductCatalogName,
+  //       ParentID
+  //     }
+  //   })
+  // );
 
   // Virtual fields
   if (!reqQuery.fields) {
-    const updatedRows = rows.map(row => ({
+    const virtualRows = rows.map(row => ({
       ...row,
       SalePercent: row.Sale ? `${row.Sale}%` : null,
       PriceDiscount: row.Price * ((100 - row.Sale) / 100)
     }));
-    return updatedRows;
+    return virtualRows;
   }
 
   return rows;
@@ -59,6 +77,23 @@ exports.getProductById = async id => {
   return rows[0];
 };
 
+exports.getProductByProductName = async productName => {
+  const [rows] = await db.query(`SELECT * FROM product WHERE ProductName = ?`, [
+    productName
+  ]);
+  return rows[0];
+};
+
+exports.getOtherProductByProductName = async (productId, productName) => {
+  const [
+    rows
+  ] = await db.query(
+    `SELECT * FROM product WHERE ProductName = ? AND ProductID <> ?`,
+    [productName, productId]
+  );
+  return rows[0];
+};
+
 exports.createProduct = async data => {
   const query = `
     INSERT INTO product (ProductCatalogID,
@@ -73,7 +108,17 @@ exports.createProduct = async data => {
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
   `;
 
-  const [result] = await db.execute(query, Object.values(data));
+  const [result] = await db.execute(query, [
+    data.ProductCatalogID,
+    data.ProductName,
+    data.DescribeProduct,
+    data.Image,
+    data.Product_Information,
+    data.Quantity,
+    data.Price,
+    data.Sale,
+    data.Hide
+  ]);
 
   // return { ProductID: result.insertId, ...data };
   return this.getProductById(result.insertId);

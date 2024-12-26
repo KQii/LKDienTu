@@ -22,6 +22,29 @@ exports.getProductDetailsService = async id => {
   return product;
 };
 
+exports.getProductByIdService = async productId => {
+  const product = await productModel.getProductById(productId);
+  return product;
+};
+
+exports.getProductByProductNameService = async productData => {
+  const product = await productModel.getProductByProductName(
+    productData.ProductName
+  );
+  return product;
+};
+
+exports.getOtherProductByProductNameService = async (
+  productId,
+  productData
+) => {
+  const product = await productModel.getOtherProductByProductName(
+    productId,
+    productData.ProductName
+  );
+  return product;
+};
+
 exports.createNewProductService = async productData => {
   const result = await productModel.createProduct(productData);
   return result;
