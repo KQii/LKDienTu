@@ -34,17 +34,6 @@ exports.getAllProducts = async reqQuery => {
   // console.log(features.query);
   const [rows] = await db.execute(features.query, features.values);
 
-  // const finalRows = rows.map(
-  //   ({ ProductCatalogID, ProductCatalogName, ParentID, ...rest }) => ({
-  //     ...rest,
-  //     ProductCatalog: {
-  //       ProductCatalogID,
-  //       ProductCatalogName,
-  //       ParentID
-  //     }
-  //   })
-  // );
-
   // Virtual fields
   if (!reqQuery.fields) {
     const virtualRows = rows.map(row => ({

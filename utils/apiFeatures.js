@@ -57,6 +57,9 @@ class APIFeatures {
       this.query += ` ORDER BY `;
 
       sortConditionsArr.forEach(el => {
+        if (el === 'ProductCatalog') el = 'pc.ProductCatalogName';
+        if (el === '-ProductCatalog') el = '-pc.ProductCatalogName';
+
         let sortField = `${el}`;
         let type = 'ASC';
 
@@ -84,7 +87,6 @@ class APIFeatures {
       p.ProductName, p.DescribeProduct, p.Image, p.Product_Information, p.Quantity, p.Price, p.Sale, p.Hide
       `.trim();
       let { fields } = this.queryStr;
-      console.log(fields);
 
       if (fields[0] === '-') {
         if (fields.includes('ProductCatalog')) {
@@ -97,7 +99,6 @@ class APIFeatures {
             ''
           );
         }
-        console.log('Test', this.query);
 
         fields
           .split(',')
