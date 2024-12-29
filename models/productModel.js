@@ -10,28 +10,22 @@ exports.getProductStats = async () => {
 exports.getAllProducts = async reqQuery => {
   const query = `
     SELECT
-      p.ProductID,
+      p.productID,
       JSON_OBJECT(
-        'ProductCatalogID', pc.ProductCatalogID,
-        'ProductCatalogName', pc.ProductCatalogName
-      ) AS ProductCatalog,
-      p.ProductName, p.DescribeProduct, p.Image, p.Product_Information, p.Quantity, p.Price, p.Sale, p.Hide
+        'productCatalogID', pc.productCatalogID,
+        'productCatalogName', pc.productCatalogName
+      ) AS productCatalog,
+      p.productName, p.describeProduct, p.image, p.productInformation, p.quantity, p.price, p.sale, p.hide
     FROM product AS p
-    JOIN product_catalog AS pc ON p.ProductCatalogID = pc.ProductCatalogID
+    JOIN product_catalog AS pc ON p.productCatalogID = pc.productCatalogID
   `;
-  // const query = `
-  //   SELECT *
-  //   FROM product AS p
-  //   JOIN product_catalog AS pc ON p.ProductCatalogID = pc.ProductCatalogID
-  // `;
 
   const features = new APIFeatures(query, reqQuery)
     .filter()
     .sort()
-    .paginate();
-  await features.limitFields();
+    .paginate()
+    .limitFields();
 
-  // console.log(features.query);
   const [rows] = await db.execute(features.query, features.values);
 
   // Virtual fields
@@ -51,15 +45,15 @@ exports.getProductById = async id => {
   const [rows] = await db.query(
     `
     SELECT
-      p.ProductID,
+      p.productID,
       JSON_OBJECT(
         'ProductCatalogID', pc.ProductCatalogID,
         'ProductCatalogName', pc.ProductCatalogName
-      ) AS ProductCatalog,
-      p.ProductName, p.DescribeProduct, p.Image, p.Product_Information, p.Quantity, p.Price, p.Sale, p.Hide
+      ) AS productCatalog,
+      p.productName, p.describeProduct, p.image, p.productInformation, p.quantity, p.price, p.sale, p.hide
     FROM product AS p
-    JOIN product_catalog AS pc ON p.ProductCatalogID = pc.ProductCatalogID
-    WHERE p.ProductID = ?
+    JOIN product_catalog AS pc ON p.productCatalogID = pc.productCatalogID
+    WHERE p.productID = ?
     `,
     [id]
   );
@@ -67,7 +61,7 @@ exports.getProductById = async id => {
 };
 
 exports.getProductByProductName = async productName => {
-  const [rows] = await db.query(`SELECT * FROM product WHERE ProductName = ?`, [
+  const [rows] = await db.query(`SELECT * FROM product WHERE productName = ?`, [
     productName
   ]);
   return rows[0];
@@ -77,7 +71,7 @@ exports.getOtherProductByProductName = async (productId, productName) => {
   const [
     rows
   ] = await db.query(
-    `SELECT * FROM product WHERE ProductName = ? AND ProductID <> ?`,
+    `SELECT * FROM product WHERE productName = ? AND productID <> ?`,
     [productName, productId]
   );
   return rows[0];
@@ -85,15 +79,15 @@ exports.getOtherProductByProductName = async (productId, productName) => {
 
 exports.createProduct = async data => {
   const query = `
-    INSERT INTO product (ProductCatalogID,
-    ProductName,
-    DescribeProduct,
-    Image,
-    Product_Information,
-    Quantity,
-    Price,
-    Sale,
-    Hide)
+    INSERT INTO product (productCatalogID,
+    productName,
+    describeProduct,
+    image,
+    productInformation,
+    quantity,
+    price,
+    sale,
+    hide)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
   `;
 
@@ -102,14 +96,13 @@ exports.createProduct = async data => {
     data.ProductName,
     data.DescribeProduct,
     data.Image,
-    data.Product_Information,
+    data.productInformation,
     data.Quantity,
     data.Price,
     data.Sale,
     data.Hide
   ]);
 
-  // return { ProductID: result.insertId, ...data };
   return this.getProductById(result.insertId);
 };
 
@@ -127,7 +120,7 @@ exports.updateProductById = async (id, data) => {
 
   let updateQuery = 'UPDATE product SET ';
   if (fields.length > 0) {
-    updateQuery += `${fields.join(', ')} WHERE ProductID = ?`;
+    updateQuery += `${fields.join(', ')} WHERE productID = ?`;
   }
 
   const [result] = await db.execute(updateQuery, values);
@@ -135,7 +128,7 @@ exports.updateProductById = async (id, data) => {
 };
 
 exports.deleteProductById = async id => {
-  const [rows] = await db.query('DELETE FROM product WHERE ProductID = ?', [
+  const [rows] = await db.query('DELETE FROM product WHERE productID = ?', [
     id
   ]);
 
@@ -149,7 +142,7 @@ exports.checkCreateProductAvailable = async (
 ) => {
   const [res] = await db.query(
     `
-    SELECT OrderedNumber FROM cart_detail WHERE AccountID = ? AND ProductID = ?
+    SELECT orderedNumber FROM cart_detail WHERE accountID = ? AND productID = ?
     `,
     [accountID, productID]
   );
@@ -158,7 +151,7 @@ exports.checkCreateProductAvailable = async (
   const [
     rows
   ] = await db.query(
-    'SELECT * FROM product WHERE ProductID = ? AND Quantity >= ?',
+    'SELECT * FROM product WHERE productID = ? AND quantity >= ?',
     [productID, cartOrderedNumber + orderedNumber]
   );
 
@@ -169,7 +162,7 @@ exports.checkUpdateProductAvailable = async (productID, orderedNumber) => {
   const [
     rows
   ] = await db.query(
-    'SELECT * FROM product WHERE ProductID = ? AND Quantity >= ?',
+    'SELECT * FROM product WHERE productID = ? AND quantity >= ?',
     [productID, orderedNumber]
   );
 
@@ -180,7 +173,7 @@ exports.updateStockQuantityAfterPurchased = async (
   productID,
   orderedNumber
 ) => {
-  const query = `UPDATE product SET Quantity = Quantity - ? WHERE ProductID = ?`;
+  const query = `UPDATE product SET quantity = quantity - ? WHERE productID = ?`;
 
   await db.execute(query, [orderedNumber, productID]);
 };

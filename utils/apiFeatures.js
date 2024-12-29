@@ -1,3 +1,8 @@
+// prettier-ignore
+const allowedFields = [
+  'productID', 'productCatalog', 'productName', 'describeProduct', 'image', 'productInformation', 'quantity', 'price', 'sale', 'hide', '-productID', '-productCatalog', '-productName', '-describeProduct', '-image', '-productInformation', '-quantity', '-price', '-sale', '-hide'
+];
+
 const queryString = (operator, fieldName) => {
   switch (operator) {
     case 'gte':
@@ -53,12 +58,14 @@ class APIFeatures {
   sort() {
     if (this.queryStr.sort) {
       const sortConditionsArr = this.queryStr.sort.split(',');
+      let count = 0;
 
       this.query += ` ORDER BY `;
 
       sortConditionsArr.forEach(el => {
-        if (el === 'ProductCatalog') el = 'pc.ProductCatalogName';
-        if (el === '-ProductCatalog') el = '-pc.ProductCatalogName';
+        if (!allowedFields.includes(el)) return;
+        if (el === 'productCatalog') el = 'pc.productCatalogName';
+        if (el === '-productCatalog') el = '-pc.productCatalogName';
 
         let sortField = `${el}`;
         let type = 'ASC';
@@ -69,33 +76,36 @@ class APIFeatures {
         }
 
         this.query += `${sortField} ${type}, `;
+        count += 1;
       });
 
+      if (count === 0)
+        this.query = this.query.slice(0, this.query.indexOf('ORDER BY'));
       this.query = this.query.slice(0, -2);
     }
     return this;
   }
 
-  async limitFields() {
+  limitFields() {
     if (this.queryStr.fields) {
       const query = `
-      p.ProductID,
+      p.productID,
       JSON_OBJECT(
-        'ProductCatalogID', pc.ProductCatalogID,
-        'ProductCatalogName', pc.ProductCatalogName
-      ) AS ProductCatalog,
-      p.ProductName, p.DescribeProduct, p.Image, p.Product_Information, p.Quantity, p.Price, p.Sale, p.Hide
+        'productCatalogID', pc.productCatalogID,
+        'productCatalogName', pc.productCatalogName
+      ) AS productCatalog,
+      p.productName, p.describeProduct, p.image, p.productInformation, p.quantity, p.price, p.sale, p.hide
       `.trim();
       let { fields } = this.queryStr;
 
       if (fields[0] === '-') {
-        if (fields.includes('ProductCatalog')) {
-          this.query = this.query.replace(
-            `,
-      JSON_OBJECT(
-        'ProductCatalogID', pc.ProductCatalogID,
-        'ProductCatalogName', pc.ProductCatalogName
-      ) AS ProductCatalog`,
+        let queryCopy = `${query},`;
+        if (fields.includes('productCatalog')) {
+          queryCopy = queryCopy.replace(
+            `JSON_OBJECT(
+        'productCatalogID', pc.productCatalogID,
+        'productCatalogName', pc.productCatalogName
+      ) AS productCatalog,`,
             ''
           );
         }
@@ -104,18 +114,29 @@ class APIFeatures {
           .split(',')
           .map(el => el.slice(1))
           .forEach(el => {
-            this.query = this.query.replace(`, p.${el}`, '');
+            queryCopy = queryCopy.replace(new RegExp(`p\\.${el}\\b,`, 'g'), '');
           });
-      } else {
-        if (fields.includes('ProductCatalog')) {
-          fields = fields.slice(0, fields.indexOf('ProductCatalog') - 1);
-          fields += `,JSON_OBJECT(
-                  'ProductCatalogID', pc.ProductCatalogID,
-                  'ProductCatalogName', pc.ProductCatalogName
-                ) AS ProductCatalog`;
-        }
 
-        this.query = this.query.replace(query, fields);
+        this.query = this.query.replace(
+          query,
+          queryCopy.slice(0, queryCopy.lastIndexOf(','))
+        );
+      } else {
+        fields = fields
+          .split(',')
+          .filter(el => allowedFields.includes(el))
+          .join(',');
+
+        if (fields.includes('productCatalog')) {
+          fields = fields.replace(
+            'productCatalog',
+            `JSON_OBJECT(
+                  'productCatalogID', pc.productCatalogID,
+                  'productCatalogName', pc.productCatalogName
+                ) AS productCatalog`
+          );
+        }
+        if (fields.length > 0) this.query = this.query.replace(query, fields);
       }
     }
     return this;
@@ -125,14 +146,6 @@ class APIFeatures {
     const page = +this.queryStr.page || 1;
     const limit = +this.queryStr.limit || 5;
     const skip = (page - 1) * limit;
-
-    // if (this.queryStr.page) {
-    //   const [rows] = await db.query(
-    //     `SELECT COUNT(*) AS total_rows FROM ${tableName}`
-    //   );
-    //   const numProducts = rows[0].total_rows;
-    //   if (skip >= numProducts) throw new Error('This page does not exist');
-    // }
 
     this.query += ` LIMIT ${skip}, ${limit}`;
     return this;

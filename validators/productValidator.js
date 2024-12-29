@@ -1,25 +1,25 @@
 const { body, param, query } = require('express-validator');
 
 exports.validateProductCreation = [
-  body('ProductName')
+  body('productName')
     .notEmpty()
     .withMessage('Product name is required')
     .isLength({ min: 3, max: 50 })
     .withMessage('Product name must be between 3 and 50 characters'),
 
-  body('Quantity')
+  body('quantity')
     .notEmpty()
     .withMessage('Quantity is required')
     .isFloat({ min: 0 })
     .withMessage('Quantity must be a positive number'),
 
-  body('Price')
+  body('price')
     .notEmpty()
     .withMessage('Price is required')
     .isFloat({ min: 0 })
     .withMessage('Price must be a positive number'),
 
-  body('Sale')
+  body('sale')
     .notEmpty()
     .withMessage('Sale is required')
     .isFloat({ min: 0, max: 100 })
@@ -27,22 +27,22 @@ exports.validateProductCreation = [
 ];
 
 exports.validatePatchProduct = [
-  body('ProductName')
+  body('productName')
     .optional()
     .isLength({ min: 3, max: 50 })
     .withMessage('Product name must be between 3 and 50 characters'),
 
-  body('Quantity')
+  body('quantity')
     .optional()
     .isFloat({ min: 0 })
     .withMessage('Quantity must be a positive number'),
 
-  body('Price')
+  body('price')
     .optional()
     .isFloat({ min: 0 })
     .withMessage('Price must be a positive number'),
 
-  body('Sale')
+  body('sale')
     .optional()
     .isFloat({ min: 0, max: 100 })
     .withMessage('Sale must be a positive number')

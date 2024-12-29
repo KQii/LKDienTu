@@ -1,5 +1,6 @@
 const productModel = require('../models/productModel');
 const AppError = require('../utils/appError');
+const filterObj = require('../utils/filterObj');
 
 exports.getProductStatsService = async () => {
   const productStats = await productModel.getProductStats();
@@ -10,7 +11,11 @@ exports.getProductStatsService = async () => {
 };
 
 exports.getAllProductsService = async reqQuery => {
-  const allProducts = await productModel.getAllProducts(reqQuery);
+  // prettier-ignore
+  const validRequestQuery = filterObj(reqQuery,
+    'productID', 'productCatalogID', 'productName', 'describeProduct', 'image', 'productInformation', 'quantity','price', 'sale', 'hide', 'sort', 'fields', 'page', 'limit');
+
+  const allProducts = await productModel.getAllProducts(validRequestQuery);
   return allProducts;
 };
 
