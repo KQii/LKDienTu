@@ -1,5 +1,6 @@
 const express = require('express');
 const morgan = require('morgan');
+const qs = require('qs');
 const rateLimit = require('express-rate-limit');
 const helmet = require('helmet');
 const xss = require('xss-clean');
@@ -45,6 +46,11 @@ app.use(xss());
 app.use(hpp({ whitelist: ['price', 'quantity', 'hide '] }));
 
 app.use(express.static(`${__dirname}/public`));
+
+app.use((req, res, next) => {
+  req.query = qs.parse(req._parsedUrl.query);
+  next();
+});
 
 app.use((req, res, next) => {
   req.requestTime = new Date().toISOString();

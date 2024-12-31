@@ -1,7 +1,14 @@
-// prettier-ignore
-const allowedFields = [
+const allowedFieldsMap = {
+  // prettier-ignore
+  product: [
   'productID', 'productCatalog', 'productName', 'describeProduct', 'image', 'productInformation', 'quantity', 'price', 'sale', 'hide', '-productID', '-productCatalog', '-productName', '-describeProduct', '-image', '-productInformation', '-quantity', '-price', '-sale', '-hide'
-];
+  ],
+
+  // prettier-ignore
+  productCatalog: [
+  'pc1.productCatalogID', 'pc1.productCatalogName', 'pc1.parentID', '-pc1.productCatalogID', '-pc1.productCatalogName', '-pc1.parentID'
+  ]
+};
 
 const queryString = (operator, fieldName) => {
   switch (operator) {
@@ -19,10 +26,11 @@ const queryString = (operator, fieldName) => {
 };
 
 class APIFeatures {
-  constructor(query, queryStr) {
+  constructor(query, queryStr, tableName) {
     this.query = query;
     this.queryStr = queryStr;
     this.values = [];
+    this.allowedFields = allowedFieldsMap[tableName] || [];
   }
 
   filter() {
@@ -63,7 +71,7 @@ class APIFeatures {
       this.query += ` ORDER BY `;
 
       sortConditionsArr.forEach(el => {
-        if (!allowedFields.includes(el)) return;
+        if (!this.allowedFields.includes(el)) return;
         if (el === 'productCatalog') el = 'pc.productCatalogName';
         if (el === '-productCatalog') el = '-pc.productCatalogName';
 
@@ -83,6 +91,7 @@ class APIFeatures {
         this.query = this.query.slice(0, this.query.indexOf('ORDER BY'));
       this.query = this.query.slice(0, -2);
     }
+
     return this;
   }
 
@@ -124,7 +133,7 @@ class APIFeatures {
       } else {
         fields = fields
           .split(',')
-          .filter(el => allowedFields.includes(el))
+          .filter(el => this.allowedFields.includes(el))
           .join(',');
 
         if (fields.includes('productCatalog')) {

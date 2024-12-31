@@ -1,8 +1,49 @@
 const productCatalogModel = require('../models/productCatalogModel');
 const AppError = require('../utils/appError');
+const filterObj = require('../utils/filterObj');
 
-exports.getAllProductCatalogsService = async () => {
-  const allProductCatalogs = await productCatalogModel.getAllProductCatalogs();
+const renameKeys = (obj, keyMap) => {
+  const newObj = { ...obj };
+  for (const [oldKey, newKey] of Object.entries(keyMap)) {
+    for (const [key, value] of Object.entries(newObj)) {
+      if (key === oldKey) {
+        newObj[newKey] = newObj[oldKey];
+        delete newObj[oldKey];
+      }
+      if (value === oldKey) {
+        newObj[key] = newKey;
+      }
+      if (value.includes(',')) {
+        const valueStr = value
+          .split(',')
+          .map(val => {
+            return val === oldKey ? newKey : val;
+          })
+          .join(',');
+        newObj[key] = valueStr;
+      }
+    }
+  }
+  return newObj;
+};
+
+exports.getAllProductCatalogsService = async reqQuery => {
+  // prettier-ignore
+  const validRequestQuery = filterObj(reqQuery,
+    'productCatalogID', 'productCatalogName', 'parentID', 'sort', 'fields', 'page', 'limit');
+
+  const validCatalogRequestQuery = renameKeys(validRequestQuery, {
+    productCatalogID: 'pc1.productCatalogID',
+    productCatalogName: 'pc1.productCatalogName',
+    parentID: 'pc1.parentID',
+    '-productCatalogID': '-pc1.productCatalogID',
+    '-productCatalogName': '-pc1.productCatalogName',
+    '-parentID': '-pc1.parentID'
+  });
+
+  const allProductCatalogs = await productCatalogModel.getAllProductCatalogs(
+    validCatalogRequestQuery
+  );
   return allProductCatalogs;
 };
 

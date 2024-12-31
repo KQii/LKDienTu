@@ -20,7 +20,7 @@ exports.getAllProducts = async reqQuery => {
     JOIN product_catalog AS pc ON p.productCatalogID = pc.productCatalogID
   `;
 
-  const features = new APIFeatures(query, reqQuery)
+  const features = new APIFeatures(query, reqQuery, 'product')
     .filter()
     .sort()
     .paginate()

@@ -1,7 +1,8 @@
 const db = require('../database');
+const APIFeatures = require('./../utils/apiFeatures');
 
-exports.getAllProductCatalogs = async () => {
-  const [rows] = await db.query(`
+exports.getAllProductCatalogs = async reqQuery => {
+  const query = `
     SELECT pc1.ProductCatalogID, pc1.ProductCatalogName,
 	    IF(pc1.ParentID IS NULL, NULL, JSON_OBJECT(
         'ProductCatalogID', pc2.ProductCatalogID,
@@ -10,7 +11,17 @@ exports.getAllProductCatalogs = async () => {
     FROM product_catalog AS pc1
     LEFT JOIN product_catalog AS pc2
     ON pc1.ParentID = pc2.ProductCatalogID
-    `);
+  `;
+
+  const features = new APIFeatures(query, reqQuery, 'productCatalog')
+    .filter()
+    .sort()
+    .paginate()
+    .limitFields();
+
+  // console.log(features.query, features.values);
+
+  const [rows] = await db.execute(features.query, features.values);
 
   return rows;
 };

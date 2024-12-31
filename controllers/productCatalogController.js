@@ -3,7 +3,9 @@ const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/appError');
 
 exports.getAllProductCatalogs = catchAsync(async (req, res, next) => {
-  const productCatalogs = await productCatalogService.getAllProductCatalogsService();
+  const productCatalogs = await productCatalogService.getAllProductCatalogsService(
+    req.query
+  );
 
   // SEND RESPONSE
   res.status(200).json({
