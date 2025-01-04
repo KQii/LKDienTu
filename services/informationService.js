@@ -6,8 +6,11 @@ exports.getAllInfoService = async () => {
   return allInfo;
 };
 
-exports.createNewInfoService = async infoData => {
-  const result = await informationModel.createInfo(infoData);
+exports.createNewInfoService = async (infoData, connection) => {
+  const result = await informationModel.createInfoWithTrans(
+    infoData,
+    connection
+  );
   return result;
 };
 
@@ -20,10 +23,7 @@ exports.getInfoByIdService = async id => {
 };
 
 exports.getInfoByCICService = async CIC => {
-  const info = await informationModel.getInfoById(CIC);
-  if (!info) {
-    throw new AppError(`Info with ID ${CIC} not found`, 404);
-  }
+  const info = await informationModel.getInfoByCIC(CIC);
   return info;
 };
 
@@ -38,3 +38,27 @@ exports.deleteInfoService = async id => {
     throw new AppError(`Info with ID ${id} not found`, 404);
   }
 };
+
+exports.getInfoByPhoneNumberService = async phoneNumber => {
+  const info = await informationModel.getInfoByPhoneNumber(phoneNumber);
+  return info;
+};
+
+// exports.createNewInfoWithTransaction = async (infoData, accountID) => {
+//   return await withTransaction(async connection => {
+//     // Tạo info mới
+//     const newInfo = await informationModel.createInfo(infoData, connection);
+
+//     // Cập nhật CIC trong account
+//     const { updatedAccount } = await accountModel.updateAccountByCIC(
+//       accountID,
+//       newInfo.CIC,
+//       connection
+//     );
+
+//     return {
+//       info: newInfo,
+//       account: updatedAccount
+//     };
+//   });
+// };

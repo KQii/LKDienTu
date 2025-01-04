@@ -22,13 +22,20 @@ router.post(
   handleValidationErrors,
   authController.forgotPassword
 );
-router.patch('/resetPassword/:token', authController.resetPassword);
+router.patch(
+  '/resetPassword/:token',
+  accountValidator.validateComparePassword,
+  handleValidationErrors,
+  authController.resetPassword
+);
 
 router.patch('/updateMe', authController.protect, accountController.updateMe);
 
 router.patch(
   '/updateMyPassword',
   authController.protect,
+  accountValidator.validateComparePassword,
+  handleValidationErrors,
   authController.updatePassword
 );
 

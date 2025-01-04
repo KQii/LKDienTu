@@ -11,12 +11,27 @@ exports.getInfoById = async id => {
   return rows[0];
 };
 
+exports.getInfoByIdWithTrans = async (id, connection) => {
+  const [rows] = await connection.execute(
+    'SELECT * FROM info WHERE InfoID = ?',
+    [id]
+  );
+  return rows[0];
+};
+
 exports.getInfoByCIC = async CIC => {
   const [rows] = await db.query('SELECT * FROM info WHERE CIC = ?', [CIC]);
   return rows[0];
 };
 
-exports.createInfo = async data => {
+exports.getInfoByPhoneNumber = async phoneNumber => {
+  const [rows] = await db.query('SELECT * FROM info WHERE PhoneNumber = ?', [
+    phoneNumber
+  ]);
+  return rows[0];
+};
+
+exports.createInfoWithTrans = async (data, connection) => {
   const {
     CIC,
     PhoneNumber,
@@ -37,7 +52,7 @@ exports.createInfo = async data => {
   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `;
 
-  const [result] = await db.execute(query, [
+  const [result] = await connection.execute(query, [
     CIC,
     PhoneNumber,
     FirstName,
@@ -52,7 +67,7 @@ exports.createInfo = async data => {
     City
   ]);
 
-  return this.getInfoById(result.insertId);
+  return this.getInfoByIdWithTrans(result.insertId, connection);
 };
 
 exports.updateInfoById = async (id, data) => {

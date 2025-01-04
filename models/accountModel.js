@@ -1,4 +1,5 @@
 const db = require('../database');
+// const trans = require('../utils/transaction');
 
 exports.getAllAccounts = async () => {
   const [rows] = await db.query(
@@ -18,6 +19,24 @@ exports.getAllAccounts = async () => {
 
 exports.getAccountById = async id => {
   const [rows] = await db.query(
+    `
+    SELECT
+      a.AccountID, a.AccountName, a.CIC, a.Mail,
+      JSON_OBJECT(
+        'RoleID', r.RoleID,
+        'RoleName', r.RoleName
+      ) AS Role
+    FROM account AS a
+    JOIN roles AS r ON a.RoleID = r.RoleID
+    WHERE a.AccountID = ?
+    `,
+    [id]
+  );
+  return rows[0];
+};
+
+exports.getAccountByIdWithTrans = async (id, connection) => {
+  const [rows] = await connection.execute(
     `
     SELECT
       a.AccountID, a.AccountName, a.CIC, a.Mail,
@@ -102,19 +121,14 @@ exports.getAccountByPasswordResetToken = async passwordResetToken => {
 };
 
 exports.createAccount = async data => {
-  const { AccountName, Password, Mail, RoleID } = data;
+  const { AccountName, Password, Mail } = data;
 
   const query = `
     INSERT INTO account (AccountName, Password, Mail)
     VALUES (?, ?, ?)
   `;
 
-  const [result] = await db.execute(query, [
-    AccountName,
-    Password,
-    Mail,
-    RoleID
-  ]);
+  const [result] = await db.execute(query, [AccountName, Password, Mail]);
   return this.getAccountById(result.insertId);
 };
 
@@ -138,25 +152,30 @@ exports.createAccountSuperadmin = async data => {
 exports.updateAccountPassword = async data => {
   const { AccountID, Password } = data;
 
-  console.log(AccountID, Password);
-
   const query = `
     UPDATE account SET Password = ?, PasswordResetToken = null, PasswordResetExpires = null, PasswordChangedAt = NOW() WHERE AccountID = ?
   `;
-  await db.execute(query, [Password, AccountID]);
+  // await db.execute(query, [Password, AccountID]);
+  const [result] = await db.execute(query, [Password, AccountID]);
+  return { result, updatedAccount: this.getAccountById(AccountID) };
 };
 
 exports.updatePasswordResetToken = async data => {
-  const { AccountID, PasswordResetToken } = data;
+  const { AccountID, PasswordResetToken, PasswordResetExpires } = data;
+  let passwordResetExpiresValue = 'DATE_ADD(NOW(), INTERVAL 10 MINUTE)';
+  if (PasswordResetExpires === 'error') passwordResetExpiresValue = null;
 
-  const query = `UPDATE account SET PasswordResetToken = ?, PasswordResetExpires = DATE_ADD(NOW(), INTERVAL 10 MINUTE) WHERE AccountID = ?`;
+  const query = `UPDATE account SET PasswordResetToken = ?, PasswordResetExpires = ${passwordResetExpiresValue} WHERE AccountID = ?`;
   await db.execute(query, [PasswordResetToken, AccountID]);
 };
 
-exports.updateAccountByCIC = async (id, CIC) => {
+exports.updateAccountByCICWithTrans = async (id, CIC, connection) => {
   const query = `UPDATE account SET CIC = ? WHERE AccountID = ?`;
-  const [result] = await db.execute(query, [CIC, id]);
-  return { result, updatedAccount: this.getAccountById(id) };
+  const result = await connection.execute(query, [CIC, id]);
+  return {
+    result,
+    updatedAccount: this.getAccountByIdWithTrans(id, connection)
+  };
 };
 
 exports.deleteAccountById = async id => {

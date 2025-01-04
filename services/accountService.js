@@ -42,8 +42,12 @@ exports.getAccountByIdService = async id => {
   return account;
 };
 
-exports.updateAccountCICService = async (id, CIC) => {
-  const { updatedAccount } = await accountModel.updateAccountByCIC(id, CIC);
+exports.updateAccountCICService = async (id, CIC, connection) => {
+  const { updatedAccount } = await accountModel.updateAccountByCICWithTrans(
+    id,
+    CIC,
+    connection
+  );
   return updatedAccount;
 };
 

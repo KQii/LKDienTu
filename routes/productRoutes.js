@@ -17,15 +17,15 @@ router.route('/product-stats').get(productController.getProductStats);
 router
   .route('/')
   .get(
-    // authController.protect,
-    // authController.restrictTo('Superadmin', 'Admin'),
+    authController.protect,
+    authController.restrictTo('Superadmin', 'Admin'),
     productValidator.validateFeatures,
     handleValidationErrors,
     productController.getAllProducts
   )
   .post(
-    // authController.protect,
-    // authController.restrictTo('Superadmin'),
+    authController.protect,
+    authController.restrictTo('Superadmin'),
     productValidator.validateProductCreation,
     handleValidationErrors,
     productController.createProduct
@@ -41,16 +41,16 @@ router
     productController.getProduct
   )
   .patch(
-    // authController.protect,
-    // authController.restrictTo('Superadmin', 'Admin'),
+    authController.protect,
+    authController.restrictTo('Superadmin', 'Admin'),
     productValidator.validateProductId,
     productValidator.validatePatchProduct,
     handleValidationErrors,
     productController.updateProduct
   )
   .delete(
-    // authController.protect,
-    // authController.restrictTo('Superadmin'),
+    authController.protect,
+    authController.restrictTo('Superadmin'),
     productValidator.validateProductId,
     handleValidationErrors,
     productController.deleteProduct

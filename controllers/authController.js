@@ -36,6 +36,25 @@ const createSendToken = (account, statusCode, res) => {
 };
 
 exports.signup = catchAsync(async (req, res, next) => {
+  const accountNameExists = await accountService.getAccountByAccountNameService(
+    req.body
+  );
+  if (accountNameExists) {
+    return next(
+      new AppError(
+        'This account name has been used. Please use another name',
+        400
+      )
+    );
+  }
+
+  const mailExists = await accountService.getAccountByMailService(req.body);
+  if (mailExists) {
+    return next(
+      new AppError('This email has been used. Please use another email', 400)
+    );
+  }
+
   const newAccount = await accountService.createAccountService(req.body);
   createSendToken(newAccount, 201, res);
 });
@@ -156,7 +175,7 @@ exports.forgotPassword = catchAsync(async (req, res, next) => {
     });
   } catch (err) {
     account.PasswordResetToken = null;
-    account.PasswordResetExpires = null;
+    account.PasswordResetExpires = 'error';
     authService.updatePasswordResetTokenService(account);
 
     return next(
@@ -177,24 +196,25 @@ exports.resetPassword = catchAsync(async (req, res, next) => {
     hashedToken
   );
   // 2) If token has not expired, and there is user, set the new password
-  if (!account) return new AppError('Token is invalid or has expired', 400);
+  if (!account) {
+    return next(new AppError('Token is invalid or has expired', 400));
+  }
 
   account.Password = req.body.Password;
   account.PasswordConfirm = req.body.PasswordConfirm;
   account.PasswordResetToken = null;
   account.PasswordResetExpires = null;
-  await authService.resetAccountService(account);
   // 3) Update changedPasswordAt property for the user
+  const updatedAccount = await authService.resetAccountService(account);
   // 4) Log the user in, send JWT
-  createSendToken(account, 200, res);
+  delete updatedAccount.Password;
+  createSendToken(updatedAccount, 200, res);
 });
 
 exports.updatePassword = catchAsync(async (req, res, next) => {
-  console.log(req.Account);
   const account = await accountService.getAccountDetailsService(
     req.Account.AccountName
   );
-  console.log('updatePassword', account);
   if (
     !(await authService.correctPassword(
       req.body.PasswordCurrent,
@@ -204,14 +224,14 @@ exports.updatePassword = catchAsync(async (req, res, next) => {
     return next(new AppError('Your current password is wrong', 401));
   }
 
-  if (account.Password !== account.PasswordConfirm) {
-    return next(
-      new AppError('Password confirmation does not match password', 400)
-    );
-  }
+  // if (req.body.Password !== req.body.PasswordConfirm) {
+  //   return next(
+  //     new AppError('Password confirmation does not match password', 400)
+  //   );
+  // }
   account.Password = req.body.Password;
-  account.PasswordConfirm = req.body.PasswordConfirm;
-  await authService.resetAccountService(account);
-
-  createSendToken(account, 200, res);
+  // account.PasswordConfirm = req.body.PasswordConfirm;
+  const updatedAccount = await authService.resetAccountService(account);
+  delete updatedAccount.Password;
+  createSendToken(updatedAccount, 200, res);
 });

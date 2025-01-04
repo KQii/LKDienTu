@@ -8,8 +8,10 @@ exports.resetAccountService = async accountData => {
   accountData.Password = await bcrypt.hash(accountData.Password, 12);
   accountData.PasswordConfirm = null;
 
-  console.log(accountData.Password);
-  await accountModel.updateAccountPassword(accountData);
+  const { updatedAccount } = await accountModel.updateAccountPassword(
+    accountData
+  );
+  return updatedAccount;
 };
 
 exports.updateAccountByIdService = async (accountID, filteredBody) => {

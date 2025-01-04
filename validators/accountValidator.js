@@ -37,6 +37,22 @@ exports.validateAccountCreation = [
     .withMessage('Invalid email format')
 ];
 
+exports.validateComparePassword = [
+  body('Password')
+    .notEmpty()
+    .withMessage('Password is required'),
+
+  body('PasswordConfirm')
+    .notEmpty()
+    .withMessage('Please confirm your password')
+    .custom((value, { req }) => {
+      if (value !== req.body.Password) {
+        throw new Error('Password confirmation does not match password');
+      }
+      return true;
+    })
+];
+
 exports.validatePatchAccount = [
   body('AccountName')
     .optional()

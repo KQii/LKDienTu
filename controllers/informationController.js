@@ -1,6 +1,8 @@
+const db = require('../database');
 const informationService = require('../services/informationService');
 const accountService = require('../services/accountService');
 const catchAsync = require('../utils/catchAsync');
+const AppError = require('../utils/appError');
 
 exports.getAllInfo = catchAsync(async (req, res, next) => {
   const allInfo = await informationService.getAllInfoService();
@@ -61,17 +63,61 @@ exports.deleteInfo = catchAsync(async (req, res, next) => {
 });
 
 exports.createMyInfo = catchAsync(async (req, res, next) => {
-  const newInfo = await informationService.createNewInfoService(req.body);
-  const account = await accountService.updateAccountCICService(
-    req.Account.AccountID,
-    newInfo.CIC
+  const infoExists = await informationService.getInfoByCICService(
+    req.Account.CIC
   );
+  if (infoExists) {
+    return next(
+      new AppError('You have already created your information!', 400)
+    );
+  }
 
-  res.status(201).json({
-    status: 'success',
-    data: {
-      info: newInfo,
-      account
-    }
-  });
+  const CICExists = await informationService.getInfoByCICService(req.body.CIC);
+  if (CICExists) {
+    return next(
+      new AppError('This CIC has been used! Please check your CIC again', 400)
+    );
+  }
+
+  const phoneNumberExists = await informationService.getInfoByPhoneNumberService(
+    req.body.PhoneNumber
+  );
+  if (phoneNumberExists) {
+    return next(
+      new AppError(
+        'This phone number has been used! Please use another phone number',
+        400
+      )
+    );
+  }
+
+  const connection = await db.getConnection();
+  try {
+    await connection.beginTransaction();
+
+    const newInfo = await informationService.createNewInfoService(
+      req.body,
+      connection
+    );
+    const account = await accountService.updateAccountCICService(
+      req.Account.AccountID,
+      newInfo.CIC,
+      connection
+    );
+
+    await connection.commit();
+
+    res.status(201).json({
+      status: 'success',
+      data: {
+        info: newInfo,
+        account
+      }
+    });
+  } catch (err) {
+    await connection.rollback();
+    return next(err);
+  } finally {
+    connection.release();
+  }
 });
