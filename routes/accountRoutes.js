@@ -50,7 +50,9 @@ router.post(
 router.patch(
   '/updateMyInfo',
   authController.protect,
-  informationController.updateInfo
+  informationValidator.validatePatchInfo,
+  handleValidationErrors,
+  informationController.updateMyInfo
 );
 
 router

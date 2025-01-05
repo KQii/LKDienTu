@@ -62,7 +62,7 @@ exports.validatePatchAccount = [
   body('CIC')
     .optional()
     .custom(value => {
-      if (value && (value !== 10 || value !== 12)) {
+      if (value && value.length !== 10 && value.length !== 12) {
         throw new Error('CIC must be 10 or 12 characters long');
       }
       return true;

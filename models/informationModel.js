@@ -31,6 +31,17 @@ exports.getInfoByPhoneNumber = async phoneNumber => {
   return rows[0];
 };
 
+exports.getInfoByAccountCIC = async CIC => {
+  const query = `
+  SELECT *
+  FROM info AS i
+  JOIN account AS a ON i.CIC = a.CIC
+  WHERE a.CIC = ?
+  `;
+  const [rows] = await db.query(query, [CIC]);
+  return rows[0];
+};
+
 exports.createInfoWithTrans = async (data, connection) => {
   const {
     CIC,

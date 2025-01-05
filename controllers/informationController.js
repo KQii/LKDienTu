@@ -121,3 +121,52 @@ exports.createMyInfo = catchAsync(async (req, res, next) => {
     connection.release();
   }
 });
+
+exports.updateMyInfo = catchAsync(async (req, res, next) => {
+  const myInfo = await informationService.getInfoByAccountCICService(
+    req.Account.CIC
+  );
+  if (!myInfo)
+    return next(
+      new AppError(
+        'This account has no information! Please create your infomation first at /api/v1/accounts/createMyInfo',
+        400
+      )
+    );
+
+  if (req.body.CIC && req.body.CIC !== myInfo.CIC) {
+    const CICExists = await informationService.getInfoByCICService(
+      req.body.CIC
+    );
+    if (CICExists) {
+      return next(
+        new AppError('This CIC has been used! Please check your CIC again', 400)
+      );
+    }
+  }
+  if (req.body.PhoneNumber && req.body.PhoneNumber !== myInfo.PhoneNumber) {
+    const phoneNumberExists = await informationService.getInfoByPhoneNumberService(
+      req.body.PhoneNumber
+    );
+    if (phoneNumberExists) {
+      return next(
+        new AppError(
+          'This phone number has been used! Please use another phone number',
+          400
+        )
+      );
+    }
+  }
+
+  const updatedInfo = await informationService.updateInfoService(
+    myInfo.InfoID,
+    req.body
+  );
+
+  res.status(200).json({
+    status: 'success',
+    data: {
+      info: updatedInfo
+    }
+  });
+});

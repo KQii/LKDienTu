@@ -44,21 +44,7 @@ exports.getInfoByPhoneNumberService = async phoneNumber => {
   return info;
 };
 
-// exports.createNewInfoWithTransaction = async (infoData, accountID) => {
-//   return await withTransaction(async connection => {
-//     // Tạo info mới
-//     const newInfo = await informationModel.createInfo(infoData, connection);
-
-//     // Cập nhật CIC trong account
-//     const { updatedAccount } = await accountModel.updateAccountByCIC(
-//       accountID,
-//       newInfo.CIC,
-//       connection
-//     );
-
-//     return {
-//       info: newInfo,
-//       account: updatedAccount
-//     };
-//   });
-// };
+exports.getInfoByAccountCICService = async CIC => {
+  const info = await informationModel.getInfoByAccountCIC(CIC);
+  return info;
+};

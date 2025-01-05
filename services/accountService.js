@@ -60,7 +60,8 @@ exports.createNewAccountSuperAdminService = async accountData => {
 };
 
 exports.updateAccountSuperadminService = async (accountId, accountData) => {
-  accountData.Password = await bcrypt.hash(accountData.Password, 12);
+  if (accountData.Password)
+    accountData.Password = await bcrypt.hash(accountData.Password, 12);
   const updatedAccount = await accountModel.updateAccountById(
     accountId,
     accountData

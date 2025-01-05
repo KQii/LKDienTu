@@ -78,12 +78,12 @@ exports.updateProduct = catchAsync(async (req, res, next) => {
     );
   }
 
-  const productExists = await productService.getOtherProductByProductNameService(
+  const productNameExists = await productService.getOtherProductByProductNameService(
     req.params.id,
     req.body
   );
 
-  if (productExists) {
+  if (productNameExists) {
     return next(
       new AppError(
         'This product name has been used. Please use another name',

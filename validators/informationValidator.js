@@ -14,18 +14,12 @@ exports.validateInfoCreation = [
   body('FirstName')
     .notEmpty()
     .withMessage('First name is required'),
-  // .isAlpha()
-  // .withMessage('First name only contains letters'),
 
   body('LastName')
     .notEmpty()
     .withMessage('Last name is required'),
-  // .isAlpha()
-  // .withMessage('Last name only contains letters'),
 
   body('MiddleName').optional(),
-  // .isAlpha()
-  // .withMessage('Middle name only contains letters'),
 
   body('DateOfBirth')
     .optional()
@@ -70,28 +64,53 @@ exports.validateInfoCreation = [
     .withMessage('City is required')
 ];
 
-// exports.validatePatchAccount = [
-//   body('AccountName')
-//     .optional()
-//     .isLength({ min: 3, max: 45 })
-//     .withMessage('Account name must be between 3 and 50 characters'),
+exports.validatePatchInfo = [
+  body('CIC')
+    .optional()
+    .custom(value => {
+      if (value && value.length !== 10 && value.length !== 12) {
+        throw new Error('CIC must be 10 or 12 characters long');
+      }
+      return true;
+    }),
 
-//   body('CIC')
-//     .optional()
-//     .custom(value => {
-//       if (value !== 10 || value !== 12) {
-//         throw new Error('CIC must be 10 or 12 characters long');
-//       }
-//       return true;
-//     }),
+  body('FirstName').optional(),
 
-//   body('Mail')
-//     .optional()
-//     .isEmail()
-//     .withMessage('Invalid email format'),
+  body('LastName').optional(),
 
-//   body('Password').optional()
-// ];
+  body('MiddleName').optional(),
+
+  body('DateOfBirth')
+    .optional()
+    .isDate()
+    .withMessage('Invalid date format'),
+
+  body('Sex')
+    .optional()
+    .custom(value => {
+      if (value && value !== 0 && value !== 1) {
+        throw new Error('Sex must be 0 or 1');
+      }
+      return true;
+    }),
+
+  body('PhoneNumber')
+    .optional()
+    .isLength({ min: 10, max: 10 })
+    .withMessage('Phonenumber must contain exactly 10 characters')
+    .isNumeric()
+    .withMessage('Phonenumber must contain only numbers'),
+
+  body('HouseNumber').optional(),
+
+  body('Street').optional(),
+
+  body('Ward').optional(),
+
+  body('District').optional(),
+
+  body('City').optional()
+];
 
 // exports.validateForgotPassword = [
 //   body('Mail')
