@@ -1,45 +1,21 @@
 const productCatalogModel = require('../models/productCatalogModel');
 const AppError = require('../utils/appError');
 const filterObj = require('../utils/filterObj');
-
-const renameKeys = (obj, keyMap) => {
-  const newObj = { ...obj };
-  for (const [oldKey, newKey] of Object.entries(keyMap)) {
-    for (const [key, value] of Object.entries(newObj)) {
-      if (key === oldKey) {
-        newObj[newKey] = newObj[oldKey];
-        delete newObj[oldKey];
-      }
-      if (value === oldKey) {
-        newObj[key] = newKey;
-      }
-      if (value.includes(',')) {
-        const valueStr = value
-          .split(',')
-          .map(val => {
-            return val === oldKey ? newKey : val;
-          })
-          .join(',');
-        newObj[key] = valueStr;
-      }
-    }
-  }
-  return newObj;
-};
+const mapKeysAndValues = require('../utils/mapKeysAndValues');
 
 exports.getAllProductCatalogsService = async reqQuery => {
   // prettier-ignore
   const validRequestQuery = filterObj(reqQuery,
-    'productCatalogID', 'productCatalogName', 'parentID', 'sort', 'fields', 'page', 'limit');
+    'productCatalogID', 'productCatalogName', 'parent', 'sort', 'fields', 'page', 'limit');
+  console.log('Before rename:', validRequestQuery);
 
-  const validCatalogRequestQuery = renameKeys(validRequestQuery, {
+  const validCatalogRequestQuery = mapKeysAndValues(validRequestQuery, {
     productCatalogID: 'pc1.productCatalogID',
     productCatalogName: 'pc1.productCatalogName',
-    parentID: 'pc1.parentID',
     '-productCatalogID': '-pc1.productCatalogID',
-    '-productCatalogName': '-pc1.productCatalogName',
-    '-parentID': '-pc1.parentID'
+    '-productCatalogName': '-pc1.productCatalogName'
   });
+  console.log('After rename:', validCatalogRequestQuery);
 
   const allProductCatalogs = await productCatalogModel.getAllProductCatalogs(
     validCatalogRequestQuery
@@ -54,16 +30,28 @@ exports.createNewProductCatalogService = async productCatalogData => {
   return result;
 };
 
-exports.getProductCatalogDetailsService = async productCatalogId => {
+exports.getProductCatalogByIdService = async productCatalogId => {
   const productCatalog = await productCatalogModel.getProductCatalogById(
     productCatalogId
   );
-  if (!productCatalog) {
-    throw new AppError(
-      `ProductCatalog with ID ${productCatalogId} not found`,
-      404
-    );
-  }
+  return productCatalog;
+};
+
+exports.getProductCatalogByNameService = async productCatalogName => {
+  const productCatalog = await productCatalogModel.getProductCatalogByName(
+    productCatalogName
+  );
+  return productCatalog;
+};
+
+exports.getOtherProductCatalogNameByNameService = async (
+  id,
+  productCatalogName
+) => {
+  const productCatalog = await productCatalogModel.getOtherProductCatalogNameByName(
+    id,
+    productCatalogName
+  );
   return productCatalog;
 };
 

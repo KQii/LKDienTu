@@ -18,3 +18,10 @@ exports.getInvoiceDetailService = async invoiceDetailId => {
   }
   return invoiceDetail;
 };
+
+exports.createInvoiceDetailService = async (invoiceDetailData, connection) => {
+  await invoiceDetailModel.createInvoiceDetailWithTrans(
+    invoiceDetailData,
+    connection
+  );
+};

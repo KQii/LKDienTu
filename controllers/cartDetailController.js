@@ -3,7 +3,9 @@ const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/appError');
 
 exports.getAllCartDetails = catchAsync(async (req, res, next) => {
-  const cartDetails = await cartDetailService.getAllCartDetailsService();
+  const cartDetails = await cartDetailService.getAllCartDetailsService(
+    req.query
+  );
 
   // SEND RESPONSE
   res.status(200).json({
@@ -16,9 +18,12 @@ exports.getAllCartDetails = catchAsync(async (req, res, next) => {
 });
 
 exports.getCartDetail = catchAsync(async (req, res, next) => {
-  const cartDetail = await cartDetailService.getCartDetailService(
+  const cartDetail = await cartDetailService.getCartDetailByIdService(
     req.params.id
   );
+
+  if (!cartDetail)
+    next(new AppError(`Cart Detail with ID ${req.params.id} not found`, 404));
 
   res.status(200).json({
     status: 'success',
@@ -52,6 +57,13 @@ exports.createCartDetail = catchAsync(async (req, res, next) => {
 });
 
 exports.updateCartDetail = catchAsync(async (req, res, next) => {
+  const cartDetail = await cartDetailService.getCartDetailByIdService(
+    req.params.id
+  );
+
+  if (!cartDetail)
+    next(new AppError(`Cart Detail with ID ${req.params.id} not found`, 404));
+
   const updatedCartDetail = await cartDetailService.updateCartDetailService(
     req.params.id,
     req.body
@@ -81,6 +93,11 @@ exports.getMyCart = catchAsync(async (req, res, next) => {
 });
 
 exports.updateMyCart = catchAsync(async (req, res, next) => {
+  const cartDetails = await cartDetailService.getMyCartService(
+    req.Account.AccountID
+  );
+  if (!cartDetails) return next(new AppError('Cart empty', 404));
+
   const updatedCartDetail = await cartDetailService.updateMyCartDetailService(
     req.Account.AccountID,
     req.body

@@ -10,7 +10,7 @@ exports.validateProductCreation = [
   body('quantity')
     .notEmpty()
     .withMessage('Quantity is required')
-    .isFloat({ min: 0 })
+    .isInt({ min: 0 })
     .withMessage('Quantity must be a positive number'),
 
   body('price')

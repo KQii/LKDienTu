@@ -12,7 +12,7 @@ const filterObj = (obj, ...allowedFields) => {
 };
 
 exports.getAllAccounts = catchAsync(async (req, res, next) => {
-  const accounts = await accountService.getAllAccountsService();
+  const accounts = await accountService.getAllAccountsService(req.query);
 
   // SEND RESPONSE
   res.status(200).json({
@@ -107,14 +107,30 @@ exports.createAccount = catchAsync(async (req, res, next) => {
 });
 
 exports.updateAccount = catchAsync(async (req, res, next) => {
-  const accountIdExists = await accountService.getAccountByIdService(
-    req.params.id
-  );
-  if (!accountIdExists) {
+  const account = await accountService.getAccountByIdService(req.params.id);
+  if (!account) {
     return next(
       new AppError(`Account with ID ${req.params.id} not found`, 400)
     );
   }
+
+  const accountNameExists = await accountService.getOtherAccountByAccountNameService(
+    req.params.id,
+    req.body.AccountName
+  );
+  if (accountNameExists)
+    return next(
+      new AppError('This name has been used! Please use another name', 400)
+    );
+
+  const CICExists = await accountService.getOtherAccountByCICService(
+    req.params.id,
+    req.body.CIC
+  );
+  if (CICExists)
+    return next(
+      new AppError('This CIC has been used! Please use another CIC', 400)
+    );
 
   const updatedAccount = await accountService.updateAccountSuperadminService(
     req.params.id,

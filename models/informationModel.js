@@ -1,7 +1,19 @@
 const db = require('../database');
+const APIFeatures = require('../utils/apiFeatures');
 
-exports.getAllInfo = async () => {
-  const [rows] = await db.query('SELECT * FROM info');
+exports.getAllInfo = async reqQuery => {
+  const query = `
+  SELECT
+    InfoID, CIC, PhoneNumber, FirstName, MiddleName, LastName, DateOfBirth, Sex, HouseNumber, Street, Ward, District, City
+  FROM info`;
+
+  const features = new APIFeatures(query, reqQuery, 'info')
+    .filter()
+    .sort()
+    .paginate()
+    .limitFields();
+
+  const [rows] = await db.execute(features.query, features.values);
 
   return rows;
 };
@@ -24,10 +36,30 @@ exports.getInfoByCIC = async CIC => {
   return rows[0];
 };
 
+exports.getOtherInfoByCIC = async (id, CIC) => {
+  const [
+    rows
+  ] = await db.query('SELECT * FROM info WHERE CIC = ? AND InfoID <> ?', [
+    CIC,
+    id
+  ]);
+  return rows[0];
+};
+
 exports.getInfoByPhoneNumber = async phoneNumber => {
   const [rows] = await db.query('SELECT * FROM info WHERE PhoneNumber = ?', [
     phoneNumber
   ]);
+  return rows[0];
+};
+
+exports.getOtherInfoByPhoneNumber = async (id, phoneNumber) => {
+  const [
+    rows
+  ] = await db.query(
+    'SELECT * FROM info WHERE PhoneNumber = ? AND InfoID <> ?',
+    [phoneNumber, id]
+  );
   return rows[0];
 };
 

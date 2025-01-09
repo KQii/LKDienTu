@@ -9,15 +9,14 @@ exports.getProductStats = async () => {
 
 exports.getAllProducts = async reqQuery => {
   const query = `
-    SELECT
-      p.productID,
-      JSON_OBJECT(
-        'productCatalogID', pc.productCatalogID,
-        'productCatalogName', pc.productCatalogName
-      ) AS productCatalog,
-      p.productName, p.describeProduct, p.image, p.productInformation, p.quantity, p.price, p.sale, p.hide
-    FROM product AS p
-    JOIN product_catalog AS pc ON p.productCatalogID = pc.productCatalogID
+  SELECT
+    productID, productName, describeProduct, image, productInformation, quantity, price, sale, hide,
+    JSON_OBJECT(
+      'productCatalogID', pc.productCatalogID,
+      'productCatalogName', pc.productCatalogName
+    ) AS productCatalog
+  FROM product AS p
+  JOIN product_catalog AS pc ON p.productCatalogID = pc.productCatalogID
   `;
 
   const features = new APIFeatures(query, reqQuery, 'product')
@@ -169,11 +168,12 @@ exports.checkUpdateProductAvailable = async (productID, orderedNumber) => {
   return rows[0];
 };
 
-exports.updateStockQuantityAfterPurchased = async (
+exports.updateStockQuantityAfterPurchasedWithTrans = async (
   productID,
-  orderedNumber
+  orderedNumber,
+  connection
 ) => {
   const query = `UPDATE product SET quantity = quantity - ? WHERE productID = ?`;
 
-  await db.execute(query, [orderedNumber, productID]);
+  await connection.execute(query, [orderedNumber, productID]);
 };

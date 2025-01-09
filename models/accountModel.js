@@ -1,19 +1,26 @@
 const db = require('../database');
-// const trans = require('../utils/transaction');
+const APIFeatures = require('./../utils/apiFeatures');
 
-exports.getAllAccounts = async () => {
-  const [rows] = await db.query(
-    `
-    SELECT
-      a.AccountID, a.AccountName, a.CIC, a.Mail,
-      JSON_OBJECT(
-        'RoleID', r.RoleID,
-        'RoleName', r.RoleName
-      ) AS Role
-    FROM account AS a
-    JOIN roles AS r ON a.RoleID = r.RoleID
-    `
-  );
+exports.getAllAccounts = async reqQuery => {
+  const query = `
+  SELECT
+    AccountID, AccountName, CIC, Mail,
+    JSON_OBJECT(
+      'RoleID', r.RoleID,
+      'RoleName', r.RoleName
+    ) AS Role
+  FROM account AS a
+  JOIN roles AS r ON a.RoleID = r.RoleID
+  `;
+
+  const features = new APIFeatures(query, reqQuery, 'account')
+    .filter()
+    .sort()
+    .paginate()
+    .limitFields();
+
+  const [rows] = await db.execute(features.query, features.values);
+
   return rows;
 };
 
@@ -60,6 +67,26 @@ exports.getAccountByAccountName = async accountName => {
   return rows[0];
 };
 
+exports.getOtherAccountByAccountName = async (accountId, accountName) => {
+  const [
+    rows
+  ] = await db.query(
+    `SELECT * FROM account WHERE AccountName = ? AND AccountID <> ?`,
+    [accountName, accountId]
+  );
+  return rows[0];
+};
+
+exports.getOtherAccountByCIC = async (accountId, CIC) => {
+  const [
+    rows
+  ] = await db.query(`SELECT * FROM account WHERE CIC = ? AND AccountID <> ?`, [
+    CIC,
+    accountId
+  ]);
+  return rows[0];
+};
+
 exports.getAccountByMail = async mail => {
   const [rows] = await db.query(`SELECT * FROM account WHERE Mail = ?`, [mail]);
   return rows[0];
@@ -102,8 +129,12 @@ exports.updateAccountById = async (id, data) => {
   values.push(id);
 
   let updateQuery = 'UPDATE account SET ';
+  let fieldValuePairs = fields.join(', ');
   if (fields.length > 0) {
-    updateQuery += `${fields.join(', ')} WHERE AccountID = ?`;
+    if (fields.includes('Password = ?')) {
+      fieldValuePairs = `${fieldValuePairs}, PasswordChangedAt=NOW()`;
+    }
+    updateQuery += `${fieldValuePairs} WHERE AccountID = ?`;
   }
 
   await db.execute(updateQuery, values);

@@ -1,17 +1,29 @@
 const cartDetailModel = require('../models/cartDetailModel');
 const productModel = require('../models/productModel');
 const AppError = require('../utils/appError');
+const filterObj = require('../utils/filterObj');
+const mapKeysAndValues = require('../utils/mapKeysAndValues');
 
-exports.getAllCartDetailsService = async () => {
-  const myCartDetails = await cartDetailModel.getAllCartDetails();
+exports.getAllCartDetailsService = async reqQuery => {
+  // prettier-ignore
+  const validRequestQuery = filterObj(reqQuery,
+      'OrderedNumber', 'AccountID', 'Product', 'ProductID', 'ProductName', 'Price', 'sort', 'fields', 'page', 'limit');
+
+  const validCartDetailReqQuery = mapKeysAndValues(validRequestQuery, {
+    AccountID: 'a.AccountID',
+    ProductID: 'p.ProductID',
+    '-AccountID': '-a.AccountID',
+    '-ProductID': '-p.ProductID'
+  });
+
+  const myCartDetails = await cartDetailModel.getAllCartDetails(
+    validCartDetailReqQuery
+  );
   return myCartDetails;
 };
 
-exports.getCartDetailService = async cartDetailId => {
+exports.getCartDetailByIdService = async cartDetailId => {
   const cartDetail = await cartDetailModel.getCartDetailById(cartDetailId);
-  if (!cartDetail) {
-    throw new AppError(`Cart Detail with ID ${cartDetailId} not found`, 404);
-  }
   return cartDetail;
 };
 
@@ -58,9 +70,6 @@ exports.updateCartDetailService = async (cartDetailId, cartDetailData) => {
 
 exports.getMyCartService = async accountId => {
   const myCartDetails = await cartDetailModel.getMyCartDetails(accountId);
-  if (!myCartDetails) {
-    throw new AppError(`Cart empty`, 404);
-  }
   return myCartDetails;
 };
 
@@ -82,4 +91,19 @@ exports.updateMyCartDetailService = async (accountId, cartDetailData) => {
     cartDetailData
   );
   return updatedCartDetail;
+};
+
+exports.updateOrderedNumberAfterPurchasedService = async (
+  accountId,
+  productID,
+  orderedNumber,
+  connection
+) => {
+  const result = await cartDetailModel.updateOrderedNumberAfterPurchasedWithTrans(
+    accountId,
+    productID,
+    orderedNumber,
+    connection
+  );
+  return result;
 };

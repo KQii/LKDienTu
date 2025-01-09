@@ -3,14 +3,15 @@ const APIFeatures = require('./../utils/apiFeatures');
 
 exports.getAllProductCatalogs = async reqQuery => {
   const query = `
-    SELECT pc1.ProductCatalogID, pc1.ProductCatalogName,
+    SELECT 
+      pc1.productCatalogID, pc1.productCatalogName,
 	    IF(pc1.ParentID IS NULL, NULL, JSON_OBJECT(
-        'ProductCatalogID', pc2.ProductCatalogID,
-        'ProductCatalogName', pc2.ProductCatalogName
-      )) AS Parent
+        'productCatalogID', pc2.productCatalogID,
+        'productCatalogName', pc2.productCatalogName
+      )) AS parent
     FROM product_catalog AS pc1
     LEFT JOIN product_catalog AS pc2
-    ON pc1.ParentID = pc2.ProductCatalogID
+    ON pc1.parentID = pc2.productCatalogID
   `;
 
   const features = new APIFeatures(query, reqQuery, 'productCatalog')
@@ -29,26 +30,56 @@ exports.getAllProductCatalogs = async reqQuery => {
 exports.getProductCatalogById = async id => {
   const [rows] = await db.query(
     `
-    SELECT pc1.ProductCatalogID, pc1.ProductCatalogName,
+    SELECT 
+      pc1.productCatalogID, pc1.productCatalogName,
 	    IF(pc1.ParentID IS NULL, NULL, JSON_OBJECT(
-        'ProductCatalogID', pc2.ProductCatalogID,
-        'ProductCatalogName', pc2.ProductCatalogName
-      )) AS Parent
+        'productCatalogID', pc2.productCatalogID,
+        'productCatalogName', pc2.productCatalogName
+      )) AS parent
     FROM product_catalog AS pc1
     LEFT JOIN product_catalog AS pc2
-    ON pc1.ParentID = pc2.ProductCatalogID
-    WHERE pc1.ProductCatalogID = ?
+    ON pc1.parentID = pc2.productCatalogID
+    WHERE pc1.productCatalogID = ?
     `,
     [id]
   );
   return rows[0];
 };
 
+exports.getProductCatalogByName = async name => {
+  const [rows] = await db.query(
+    `
+    SELECT 
+      pc1.productCatalogID, pc1.productCatalogName,
+	    IF(pc1.ParentID IS NULL, NULL, JSON_OBJECT(
+        'productCatalogID', pc2.productCatalogID,
+        'productCatalogName', pc2.productCatalogName
+      )) AS parent
+    FROM product_catalog AS pc1
+    LEFT JOIN product_catalog AS pc2
+    ON pc1.parentID = pc2.productCatalogID
+    WHERE pc1.productCatalogName = ?
+    `,
+    [name]
+  );
+  return rows[0];
+};
+
+exports.getOtherProductCatalogNameByName = async (id, name) => {
+  const [
+    rows
+  ] = await db.query(
+    `SELECT * FROM product_catalog WHERE productCatalogName = ? AND productCatalogID <> ?`,
+    [name, id]
+  );
+  return rows[0];
+};
+
 exports.createProductCatalog = async data => {
-  const query = `INSERT INTO product_catalog (ProductCatalogName, ParentID) VALUES (?, ?)`;
+  const query = `INSERT INTO product_catalog (productCatalogName, parentID) VALUES (?, ?)`;
   const [result] = await db.execute(query, [
-    data.ProductCatalogName,
-    data.ParentID
+    data.productCatalogName,
+    data.parentID
   ]);
 
   return this.getProductCatalogById(result.insertId);
@@ -68,7 +99,7 @@ exports.updateProductCatalogById = async (id, data) => {
 
   let updateQuery = 'UPDATE product_catalog SET ';
   if (fields.length > 0) {
-    updateQuery += `${fields.join(', ')} WHERE ProductCatalogID = ?`;
+    updateQuery += `${fields.join(', ')} WHERE productCatalogID = ?`;
   }
 
   const [result] = await db.execute(updateQuery, values);
@@ -78,7 +109,7 @@ exports.updateProductCatalogById = async (id, data) => {
 exports.deleteProductCatalogById = async id => {
   const [
     rows
-  ] = await db.query('DELETE FROM product_catalog WHERE ProductCatalogID = ?', [
+  ] = await db.query('DELETE FROM product_catalog WHERE productCatalogID = ?', [
     id
   ]);
 

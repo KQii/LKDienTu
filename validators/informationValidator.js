@@ -1,4 +1,4 @@
-const { body } = require('express-validator');
+const { body, param, query } = require('express-validator');
 
 exports.validateInfoCreation = [
   body('CIC')
@@ -112,18 +112,32 @@ exports.validatePatchInfo = [
   body('City').optional()
 ];
 
-// exports.validateForgotPassword = [
-//   body('Mail')
-//     .notEmpty()
-//     .withMessage('Email is required')
-//     .isEmail()
-//     .withMessage('Invalid email format')
-// ];
+exports.validateInfoID = [
+  param('id')
+    .notEmpty()
+    .withMessage('InfoID is required')
+    .isInt({ min: 1 })
+    .withMessage('Product ID must be a positive integer')
+];
 
-// exports.validateAccountId = [
-//   param('id')
-//     .notEmpty()
-//     .withMessage('Account ID is required')
-//     .isInt({ min: 1 })
-//     .withMessage('Account ID must be a positive integer')
-// ];
+exports.validateFeatures = [
+  query('sort')
+    .optional()
+    .trim()
+    .escape(),
+
+  query('fields')
+    .optional()
+    .trim()
+    .escape(),
+
+  query('page')
+    .optional()
+    .isInt({ min: 1 })
+    .withMessage('Page must be a positive integer'),
+
+  query('limit')
+    .optional()
+    .isInt({ min: 1 })
+    .withMessage('Limit must be a positive integer')
+];

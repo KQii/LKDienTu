@@ -15,12 +15,13 @@ exports.getInvoiceDetailById = async id => {
   return rows[0];
 };
 
-exports.createInvoiceDetail = async data => {
+exports.createInvoiceDetailWithTrans = async (data, connection) => {
   const [
     productRows
-  ] = await db.execute(`SELECT Price, Sale FROM product WHERE ProductID = ?`, [
-    data.ProductID
-  ]);
+  ] = await connection.execute(
+    `SELECT Price, Sale FROM product WHERE ProductID = ?`,
+    [data.ProductID]
+  );
 
   // if (productRows.length === 0) {
   //   throw new Error('Product not found');
@@ -35,13 +36,11 @@ exports.createInvoiceDetail = async data => {
 
   console.log([data.InvoiceID, data.ProductID, Price, Sale, data.PaidNumber]);
 
-  await db.execute(query, [
+  await connection.execute(query, [
     data.InvoiceID,
     data.ProductID,
     Price,
     Sale,
     data.PaidNumber
   ]);
-
-  // return this.getInvoiceById(result.insertId);
 };

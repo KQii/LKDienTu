@@ -3,7 +3,7 @@ const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/appError');
 
 exports.getAllRoles = catchAsync(async (req, res, next) => {
-  const roles = await roleService.getAllRolesService();
+  const roles = await roleService.getAllRolesService(req.query);
 
   // SEND RESPONSE
   res.status(200).json({
@@ -54,9 +54,18 @@ exports.getRole = catchAsync(async (req, res, next) => {
 
 exports.updateRole = catchAsync(async (req, res, next) => {
   const role = await roleService.getRoleService(req.params.id);
-
   if (!role) {
     return next(new AppError(`Role with ID ${req.params.id} not found`, 404));
+  }
+
+  const roleNameExists = await roleService.getOtherRoleByRoleNameService(
+    req.params.id,
+    req.body.RoleName
+  );
+  if (roleNameExists) {
+    return next(
+      new AppError('This role name has been used! Please use another name', 400)
+    );
   }
 
   const updatedRole = await roleService.updateRoleService(

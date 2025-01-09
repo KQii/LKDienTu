@@ -1,8 +1,12 @@
 const roleModel = require('../models/roleModel');
 const AppError = require('../utils/appError');
+const filterObj = require('../utils/filterObj');
 
-exports.getAllRolesService = async () => {
-  const allRoles = await roleModel.getAllRoles();
+exports.getAllRolesService = async reqQuery => {
+  // prettier-ignore
+  const validRequestQuery = filterObj(reqQuery, 'RoleID', 'RoleName', 'sort', 'fields', 'page', 'limit');
+
+  const allRoles = await roleModel.getAllRoles(validRequestQuery);
   return allRoles;
 };
 
@@ -16,8 +20,13 @@ exports.getRoleService = async roleId => {
   return role;
 };
 
-exports.getRoleByRoleNameService = async roleData => {
-  const role = await roleModel.getRoleByRoleName(roleData.RoleName);
+exports.getRoleByRoleNameService = async roleName => {
+  const role = await roleModel.getRoleByRoleName(roleName);
+  return role;
+};
+
+exports.getOtherRoleByRoleNameService = async (roleId, roleName) => {
+  const role = await roleModel.getOtherRoleByRoleName(roleId, roleName);
   return role;
 };
 

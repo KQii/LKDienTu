@@ -1,19 +1,28 @@
 const invoiceModel = require('../models/invoiceModel');
-const invoiceDetailModel = require('../models/invoiceDetailModel');
-const cartDetailModel = require('../models/cartDetailModel');
-const productModel = require('../models/productModel');
-const AppError = require('../utils/appError');
+const filterObj = require('../utils/filterObj');
 
-exports.getAllInvoicesService = async () => {
-  const allInvoices = await invoiceModel.getAllInvoices();
+exports.getAllInvoicesService = async (reqQuery, connection) => {
+  // prettier-ignore
+  const validReqQuery = filterObj(reqQuery,
+      'InvoiceID', 'AccountID', 'InvoiceDate', 'Paid_Method', 'IsPaid', 'IsDelete', 'sort', 'fields', 'page', 'limit');
+
+  const allInvoices = await invoiceModel.getAllInvoicesWithTrans(
+    validReqQuery,
+    connection
+  );
   return allInvoices;
 };
 
 exports.getInvoiceService = async invoiceId => {
   const invoice = await invoiceModel.getInvoiceById(invoiceId);
-  if (!invoice) {
-    throw new AppError(`Invoice with ID ${invoiceId} not found`, 404);
-  }
+  return invoice;
+};
+
+exports.getInvoiceServiceWithTrans = async (invoiceId, connection) => {
+  const invoice = await invoiceModel.getInvoiceByIdWithTrans(
+    invoiceId,
+    connection
+  );
   return invoice;
 };
 
@@ -30,27 +39,11 @@ exports.getMyInvoicesService = async accountId => {
   return myInvoices;
 };
 
-exports.createInvoiceService = async (accountId, invoiceData) => {
-  const newInvoice = await invoiceModel.createInvoice(accountId, invoiceData);
-
-  for (const product of invoiceData.SelectedProducts) {
-    await invoiceDetailModel.createInvoiceDetail({
-      InvoiceID: newInvoice.InvoiceID,
-      ProductID: product.ProductID,
-      PaidNumber: product.OrderedNumber
-    });
-
-    await cartDetailModel.updateOrderedNumberAfterPurchased(
-      accountId,
-      product.ProductID,
-      product.OrderedNumber
-    );
-
-    await productModel.updateStockQuantityAfterPurchased(
-      product.ProductID,
-      product.OrderedNumber
-    );
-  }
-
-  return this.getInvoiceService(newInvoice.InvoiceID);
+exports.createInvoiceService = async (accountId, invoiceData, connection) => {
+  const newInvoice = await invoiceModel.createInvoiceWithTrans(
+    accountId,
+    invoiceData,
+    connection
+  );
+  return this.getInvoiceServiceWithTrans(newInvoice.InvoiceID, connection);
 };

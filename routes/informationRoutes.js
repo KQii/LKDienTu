@@ -26,16 +26,23 @@ router
   .get(
     authController.protect,
     authController.restrictTo('Superadmin'),
+    informationValidator.validateInfoID,
+    handleValidationErrors,
     informationController.getInfoById
   )
   .patch(
     authController.protect,
     authController.restrictTo('Superadmin'),
+    informationValidator.validateInfoID,
+    informationValidator.validatePatchInfo,
+    handleValidationErrors,
     informationController.updateInfo
   )
   .delete(
     authController.protect,
     authController.restrictTo('Superadmin'),
+    informationValidator.validateInfoID,
+    handleValidationErrors,
     informationController.deleteInfo
   );
 

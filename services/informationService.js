@@ -1,8 +1,13 @@
 const informationModel = require('../models/informationModel');
 const AppError = require('../utils/appError');
+const filterObj = require('../utils/filterObj');
 
-exports.getAllInfoService = async () => {
-  const allInfo = await informationModel.getAllInfo();
+exports.getAllInfoService = async reqQuery => {
+  // prettier-ignore
+  const validReqQuery = filterObj(reqQuery,
+      'InfoID', 'CIC', 'PhoneNumber', 'FirstName', 'MiddleName', 'LastName', 'DateOfBirth', 'Sex', 'HouseNumber', 'Street', 'Ward', 'District', 'City', 'sort', 'fields', 'page', 'limit');
+
+  const allInfo = await informationModel.getAllInfo(validReqQuery);
   return allInfo;
 };
 
@@ -16,14 +21,16 @@ exports.createNewInfoService = async (infoData, connection) => {
 
 exports.getInfoByIdService = async id => {
   const info = await informationModel.getInfoById(id);
-  if (!info) {
-    throw new AppError(`Info with ID ${id} not found`, 404);
-  }
   return info;
 };
 
 exports.getInfoByCICService = async CIC => {
   const info = await informationModel.getInfoByCIC(CIC);
+  return info;
+};
+
+exports.getOtherInfoByCICService = async (id, CIC) => {
+  const info = await informationModel.getOtherInfoByCIC(id, CIC);
   return info;
 };
 
@@ -41,6 +48,14 @@ exports.deleteInfoService = async id => {
 
 exports.getInfoByPhoneNumberService = async phoneNumber => {
   const info = await informationModel.getInfoByPhoneNumber(phoneNumber);
+  return info;
+};
+
+exports.getOtherInfoByPhoneNumberService = async (id, phoneNumber) => {
+  const info = await informationModel.getOtherInfoByPhoneNumber(
+    id,
+    phoneNumber
+  );
   return info;
 };
 

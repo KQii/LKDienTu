@@ -18,9 +18,13 @@ exports.getAllProductCatalogs = catchAsync(async (req, res, next) => {
 });
 
 exports.getProductCatalog = catchAsync(async (req, res, next) => {
-  const productCatalog = await productCatalogService.getProductCatalogDetailsService(
+  const productCatalog = await productCatalogService.getProductCatalogByIdService(
     req.params.id
   );
+  if (!productCatalog)
+    return next(
+      new AppError(`ProductCatalog with ID ${req.params.id} not found`, 404)
+    );
 
   res.status(200).json({
     status: 'success',
@@ -31,9 +35,17 @@ exports.getProductCatalog = catchAsync(async (req, res, next) => {
 });
 
 exports.createProductCatalog = catchAsync(async (req, res, next) => {
-  if (!req.body.ProductCatalogName || req.body.ParentID === undefined) {
-    return next(new AppError('Please provide missing information!', 400));
-  }
+  // if (!req.body.ProductCatalogName || req.body.ParentID === undefined) {
+  //   return next(new AppError('Please provide missing information!', 400));
+  // }
+  const productCatalogNameExists = await productCatalogService.getProductCatalogByNameService(
+    req.body.productCatalogName
+  );
+  if (productCatalogNameExists)
+    return next(
+      new AppError('This name has been used! Please use another name', 400)
+    );
+
   const newProductCatalog = await productCatalogService.createNewProductCatalogService(
     req.body
   );
@@ -47,6 +59,23 @@ exports.createProductCatalog = catchAsync(async (req, res, next) => {
 });
 
 exports.updateProductCatalog = catchAsync(async (req, res, next) => {
+  const productCatalog = await productCatalogService.getProductCatalogByIdService(
+    req.params.id
+  );
+  if (!productCatalog)
+    return next(
+      new AppError(`ProductCatalog with ID ${req.params.id} not found`, 404)
+    );
+
+  const productCatalogNameExists = await productCatalogService.getOtherProductCatalogNameByNameService(
+    req.params.id,
+    req.body.productCatalogName
+  );
+  if (productCatalogNameExists)
+    return next(
+      new AppError('This name has been used! Please use another name', 400)
+    );
+
   const updatedProductCatalog = await productCatalogService.updateProductCatalogService(
     req.params.id,
     req.body

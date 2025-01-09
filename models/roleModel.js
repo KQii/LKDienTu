@@ -1,7 +1,16 @@
 const db = require('../database');
+const APIFeatures = require('../utils/apiFeatures');
 
-exports.getAllRoles = async () => {
-  const [rows] = await db.query('SELECT * FROM roles');
+exports.getAllRoles = async reqQuery => {
+  const query = 'SELECT RoleID, RoleName FROM roles';
+
+  const features = new APIFeatures(query, reqQuery, 'roles')
+    .filter()
+    .sort()
+    .paginate()
+    .limitFields();
+
+  const [rows] = await db.execute(features.query, features.values);
 
   return rows;
 };
@@ -14,6 +23,16 @@ exports.getRoleById = async id => {
 exports.getRoleByRoleName = async roleName => {
   const [rows] = await db.query('SELECT * FROM roles WHERE RoleName = ?', [
     roleName
+  ]);
+  return rows[0];
+};
+
+exports.getOtherRoleByRoleName = async (roleId, roleName) => {
+  const [
+    rows
+  ] = await db.query(`SELECT * FROM roles WHERE RoleName = ? AND RoleID <> ?`, [
+    roleName,
+    roleId
   ]);
   return rows[0];
 };

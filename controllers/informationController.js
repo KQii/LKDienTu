@@ -5,7 +5,7 @@ const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/appError');
 
 exports.getAllInfo = catchAsync(async (req, res, next) => {
-  const allInfo = await informationService.getAllInfoService();
+  const allInfo = await informationService.getAllInfoService(req.query);
 
   // SEND RESPONSE
   res.status(200).json({
@@ -18,6 +18,25 @@ exports.getAllInfo = catchAsync(async (req, res, next) => {
 });
 
 exports.createInfo = catchAsync(async (req, res, next) => {
+  const CICExists = await informationService.getInfoByCICService(req.body.CIC);
+  if (CICExists) {
+    return next(
+      new AppError('This CIC has been used! Please check your CIC again', 400)
+    );
+  }
+
+  const phoneNumberExists = await informationService.getInfoByPhoneNumberService(
+    req.body.PhoneNumber
+  );
+  if (phoneNumberExists) {
+    return next(
+      new AppError(
+        'This phone number has been used! Please use another phone number',
+        400
+      )
+    );
+  }
+
   const newInfo = await informationService.createNewInfoService(req.body);
 
   res.status(201).json({
@@ -30,6 +49,9 @@ exports.createInfo = catchAsync(async (req, res, next) => {
 
 exports.getInfoById = catchAsync(async (req, res, next) => {
   const info = await informationService.getInfoByIdService(req.params.id);
+  if (!info) {
+    return next(new AppError(`Info with ID ${req.params.id} not found`, 404));
+  }
 
   res.status(200).json({
     status: 'success',
@@ -40,6 +62,29 @@ exports.getInfoById = catchAsync(async (req, res, next) => {
 });
 
 exports.updateInfo = catchAsync(async (req, res, next) => {
+  const info = await informationService.getInfoByIdService(req.params.id);
+  if (!info) {
+    return next(new AppError(`Info with ID ${req.params.id} not found`, 404));
+  }
+
+  const CICExists = await informationService.getOtherInfoByCICService(
+    req.params.id,
+    req.body.CIC
+  );
+  if (CICExists)
+    return next(new AppError('This CIC has been used! Please use another CIC'));
+
+  const phoneNumberExists = await informationService.getOtherInfoByPhoneNumberService(
+    req.params.id,
+    req.body.PhoneNumber
+  );
+  if (phoneNumberExists)
+    return next(
+      new AppError(
+        'This phone number has been used! Please use another phone number'
+      )
+    );
+
   const updatedInfo = await informationService.updateInfoService(
     req.params.id,
     req.body

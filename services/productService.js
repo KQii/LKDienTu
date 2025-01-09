@@ -1,6 +1,7 @@
 const productModel = require('../models/productModel');
 const AppError = require('../utils/appError');
 const filterObj = require('../utils/filterObj');
+const mapKeysAndValues = require('../utils/mapKeysAndValues');
 
 exports.getProductStatsService = async () => {
   const productStats = await productModel.getProductStats();
@@ -12,10 +13,17 @@ exports.getProductStatsService = async () => {
 
 exports.getAllProductsService = async reqQuery => {
   // prettier-ignore
-  const validRequestQuery = filterObj(reqQuery,
-    'productID', 'productCatalogID', 'productName', 'describeProduct', 'image', 'productInformation', 'quantity','price', 'sale', 'hide', 'sort', 'fields', 'page', 'limit');
+  const validReqQuery = filterObj(reqQuery,
+    'productID', 'productCatalogID', 'productCatalogName', 'productName', 'describeProduct', 'image', 'productInformation', 'quantity','price', 'sale', 'hide', 'sort', 'fields', 'page', 'limit');
+  console.log('BEFORE RENAME: ', validReqQuery);
 
-  const allProducts = await productModel.getAllProducts(validRequestQuery);
+  const renamedReqQuery = mapKeysAndValues(validReqQuery, {
+    productCatalogID: 'p.productCatalogID',
+    '-productCatalogID': '-p.productCatalogID'
+  });
+  console.log('AFTER RENAME: ', renamedReqQuery);
+
+  const allProducts = await productModel.getAllProducts(renamedReqQuery);
   return allProducts;
 };
 
@@ -68,4 +76,16 @@ exports.deleteProductService = async productId => {
   if (result.affectedRows === 0) {
     throw new AppError(`Product with ID ${productId} not found`, 404);
   }
+};
+
+exports.updateStockQuantityAfterPurchasedService = async (
+  productId,
+  orderedNumber,
+  connection
+) => {
+  await productModel.updateStockQuantityAfterPurchasedWithTrans(
+    productId,
+    orderedNumber,
+    connection
+  );
 };
