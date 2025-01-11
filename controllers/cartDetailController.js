@@ -96,7 +96,14 @@ exports.updateMyCart = catchAsync(async (req, res, next) => {
   const cartDetails = await cartDetailService.getMyCartService(
     req.Account.AccountID
   );
-  if (!cartDetails) return next(new AppError('Cart empty', 404));
+  if (cartDetails.length === 0) return next(new AppError('Cart empty', 404));
+
+  const productExists = await cartDetailService.getCartDetailByAccountIdAndProductIdService(
+    req.Account.AccountID,
+    req.body.ProductID
+  );
+  if (!productExists)
+    return next(new AppError('Product not found in cart', 404));
 
   const updatedCartDetail = await cartDetailService.updateMyCartDetailService(
     req.Account.AccountID,

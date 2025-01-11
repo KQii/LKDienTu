@@ -2,6 +2,8 @@ const invoiceService = require('../services/invoiceService');
 const invoiceDetailService = require('../services/invoiceDetailService');
 const cartDetailService = require('../services/cartDetailService');
 const productService = require('../services/productService');
+const receiptService = require('../services/receiptService');
+const receiptDetailService = require('../services/receiptDetailService');
 const productModel = require('../models/productModel');
 const catchAsync = require('../utils/catchAsync');
 const db = require('../database');
@@ -68,18 +70,31 @@ exports.updateInvoice = catchAsync(async (req, res, next) => {
 });
 
 exports.getMyInvoices = catchAsync(async (req, res, next) => {
-  const invoices = await invoiceService.getMyInvoicesService(
-    req.Account.AccountID
-  );
+  const connection = await db.getConnection();
+  try {
+    await connection.beginTransaction();
 
-  // SEND RESPONSE
-  res.status(200).json({
-    status: 'success',
-    results: invoices.length,
-    data: {
-      invoices
-    }
-  });
+    const invoices = await invoiceService.getMyInvoicesService(
+      req.Account.AccountID,
+      req.query,
+      connection
+    );
+
+    await connection.commit();
+
+    res.status(200).json({
+      status: 'success',
+      results: invoices.length,
+      data: {
+        invoices
+      }
+    });
+  } catch (err) {
+    await connection.rollback();
+    return next(err);
+  } finally {
+    connection.release();
+  }
 });
 
 exports.createInvoice = catchAsync(async (req, res, next) => {
@@ -87,13 +102,21 @@ exports.createInvoice = catchAsync(async (req, res, next) => {
   try {
     await connection.beginTransaction();
 
+    // Create new invoice
     const newInvoice = await invoiceService.createInvoiceService(
       req.Account.AccountID,
       req.body,
       connection
     );
 
+    // Create export receipt
+    const newReceipt = await receiptService.createReceiptService(
+      req.body,
+      connection
+    );
+
     for (const product of req.body.SelectedProducts) {
+      // Create invoice detail
       const available = await productModel.checkUpdateProductAvailable(
         product.ProductID,
         product.OrderedNumber
@@ -101,7 +124,7 @@ exports.createInvoice = catchAsync(async (req, res, next) => {
       if (!available)
         return next(
           new AppError(
-            `Ordered quantity of Product with ID ${product.ProductID} exceeds available stock.`,
+            `Ordered quantity of Product with ID ${product.ProductID} exceeds available stock. Please update your cart and try again.`,
             422
           )
         );
@@ -122,6 +145,25 @@ exports.createInvoice = catchAsync(async (req, res, next) => {
         connection
       );
 
+      // Create receipt detail
+      const receiptDetailData = {
+        ReceiptID: newReceipt.ReceiptID,
+        ProductID: product.ProductID,
+        Quantity: product.OrderedNumber,
+        UnitPrice: product.UnitPrice
+      };
+      const productData = await productService.getProductByIdServiceWithTrans(
+        product.ProductID,
+        connection
+      );
+      receiptDetailData.UnitPrice = productData.price;
+
+      await receiptDetailService.createReceiptDetailService(
+        receiptDetailData,
+        connection
+      );
+
+      // Update stock quantity
       await productService.updateStockQuantityAfterPurchasedService(
         product.ProductID,
         product.OrderedNumber,
@@ -129,12 +171,17 @@ exports.createInvoice = catchAsync(async (req, res, next) => {
       );
     }
 
+    const finalInvoices = await invoiceService.getInvoiceServiceWithTrans(
+      newInvoice.InvoiceID,
+      connection
+    );
+
     await connection.commit();
 
     res.status(201).json({
       status: 'success',
       data: {
-        invoice: newInvoice
+        invoice: finalInvoices
       }
     });
   } catch (err) {

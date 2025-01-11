@@ -48,7 +48,7 @@ exports.getCartDetailById = async id => {
   return rows[0];
 };
 
-exports.getCartDetailByAccountIdAndProductId = async (id, productId) => {
+exports.getCartDetailByAccountIdAndProductId = async (accountId, productId) => {
   const [rows] = await db.query(
     `
     SELECT
@@ -64,7 +64,32 @@ exports.getCartDetailByAccountIdAndProductId = async (id, productId) => {
     JOIN product AS p ON c.ProductID = p.ProductID
     WHERE c.AccountID = ? AND c.ProductID = ?
     `,
-    [id, productId]
+    [accountId, productId]
+  );
+  return rows[0];
+};
+
+exports.getCartDetailByAccountIdAndProductIdWithTrans = async (
+  accountId,
+  productId,
+  connection
+) => {
+  const [rows] = await connection.query(
+    `
+    SELECT
+      c.CartDetailID, c.OrderedNumber,
+        a.AccountID,
+        JSON_OBJECT(
+        'ProductID', p.ProductID,
+            'ProductName', p.ProductName,
+            'Price', p.Price
+        ) AS Product
+    FROM cart_detail AS c
+    JOIN account AS a ON c.AccountID = a.AccountID
+    JOIN product AS p ON c.ProductID = p.ProductID
+    WHERE c.AccountID = ? AND c.ProductID = ?
+    `,
+    [accountId, productId]
   );
   return rows[0];
 };
@@ -73,6 +98,15 @@ exports.deleteCartDetailById = async id => {
   const [
     rows
   ] = await db.query('DELETE FROM cart_detail WHERE CartDetailID = ?', [id]);
+
+  return rows;
+};
+exports.deleteCartDetailByIdWithTrans = async (id, connection) => {
+  const [
+    rows
+  ] = await connection.query('DELETE FROM cart_detail WHERE CartDetailID = ?', [
+    id
+  ]);
 
   return rows;
 };
@@ -100,10 +134,19 @@ exports.updateCartDetailById = async (id, data) => {
     'UPDATE cart_detail SET OrderedNumber = ? WHERE CartDetailID = ?',
     [data.OrderedNumber, id]
   );
+
+  const cartDetailAfterUpdate = await this.getCartDetailByAccountIdAndProductId(
+    data.AccountID,
+    data.ProductID
+  );
+  if (cartDetailAfterUpdate.OrderedNumber === 0) {
+    await this.deleteCartDetailById(cartDetailAfterUpdate.CartDetailID);
+  }
+
   return { result, updatedCartDetail: this.getCartDetailById(id) };
 };
 
-exports.getMyCartDetails = async accountId => {
+exports.getMyCart = async accountId => {
   const [rows] = await db.query(
     `
     SELECT
@@ -120,8 +163,27 @@ exports.getMyCartDetails = async accountId => {
   `,
     [accountId]
   );
-
   return rows;
+};
+
+exports.getMyCartDetail = async accountId => {
+  const [rows] = await db.query(
+    `
+    SELECT
+      c.CartDetailID, c.OrderedNumber,
+      JSON_OBJECT(
+      'ProductID', p.ProductID,
+          'ProductName', p.ProductName,
+          'Price', p.Price
+      ) AS Product
+    FROM cart_detail AS c
+    JOIN account AS a ON c.AccountID = a.AccountID
+    JOIN product AS p ON c.ProductID = p.ProductID
+    WHERE c.AccountID = ?
+  `,
+    [accountId]
+  );
+  return rows[0];
 };
 
 exports.updateCartDetailByAccountId = async (accountId, data) => {
@@ -131,12 +193,18 @@ exports.updateCartDetailByAccountId = async (accountId, data) => {
     'UPDATE cart_detail SET OrderedNumber = ? WHERE AccountID = ? AND ProductID = ?',
     [data.OrderedNumber, accountId, data.ProductID]
   );
+
+  const cartDetailAfterUpdate = await this.getCartDetailByAccountIdAndProductId(
+    accountId,
+    data.ProductID
+  );
+  if (cartDetailAfterUpdate.OrderedNumber === 0) {
+    await this.deleteCartDetailById(cartDetailAfterUpdate.CartDetailID);
+  }
+
   return {
     result,
-    updatedCartDetail: this.getCartDetailByAccountIdAndProductId(
-      accountId,
-      data.ProductID
-    )
+    updatedCartDetail: cartDetailAfterUpdate
   };
 };
 
@@ -151,4 +219,16 @@ exports.updateOrderedNumberAfterPurchasedWithTrans = async (
     WHERE AccountID = ? AND ProductID = ?
   `;
   await connection.execute(query, [orderedNumber, accountId, productId]);
+
+  const cartDetailAfterUpdate = await this.getCartDetailByAccountIdAndProductIdWithTrans(
+    accountId,
+    productId,
+    connection
+  );
+  if (cartDetailAfterUpdate.OrderedNumber === 0) {
+    await this.deleteCartDetailByIdWithTrans(
+      cartDetailAfterUpdate.CartDetailID,
+      connection
+    );
+  }
 };

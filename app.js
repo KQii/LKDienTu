@@ -17,6 +17,8 @@ const informationRouter = require('./routes/informationRoutes');
 const cartDetailRouter = require('./routes/cartDetailRoutes');
 const invoiceRouter = require('./routes/invoiceRoutes');
 const invoiceDetailRouter = require('./routes/invoiceDetailRoutes');
+const receiptRouter = require('./routes/receiptRoutes');
+const receiptDetailRouter = require('./routes/receiptDetailRoutes');
 
 const app = express();
 
@@ -66,6 +68,8 @@ app.use('/api/v1/info', informationRouter);
 app.use('/api/v1/cartDetails', cartDetailRouter);
 app.use('/api/v1/invoices', invoiceRouter);
 app.use('/api/v1/invoiceDetails', invoiceDetailRouter);
+app.use('/api/v1/receipts', receiptRouter);
+// app.use('/api/v1/receiptDetails', receiptDetailRouter);
 
 app.all('*', (req, res, next) => {
   next(new AppError(`Can't find ${req.originalUrl} on this server`, 404));

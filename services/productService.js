@@ -40,6 +40,14 @@ exports.getProductByIdService = async productId => {
   return product;
 };
 
+exports.getProductByIdServiceWithTrans = async (productId, connection) => {
+  const product = await productModel.getProductByIdWithTrans(
+    productId,
+    connection
+  );
+  return product;
+};
+
 exports.getProductByProductNameService = async productData => {
   const product = await productModel.getProductByProductName(
     productData.ProductName
@@ -53,7 +61,7 @@ exports.getOtherProductByProductNameService = async (
 ) => {
   const product = await productModel.getOtherProductByProductName(
     productId,
-    productData.ProductName
+    productData.productName
   );
   return product;
 };
@@ -83,9 +91,31 @@ exports.updateStockQuantityAfterPurchasedService = async (
   orderedNumber,
   connection
 ) => {
+  const available = await productModel.checkUpdateProductAvailable(
+    productId,
+    orderedNumber
+  );
+  if (!available)
+    throw new AppError(
+      `Ordered quantity of Product with ID ${productId} exceeds available stock. Please update your cart and try again.`,
+      422
+    );
+
   await productModel.updateStockQuantityAfterPurchasedWithTrans(
     productId,
     orderedNumber,
+    connection
+  );
+};
+
+exports.updateStockQuantityAfterImportedService = async (
+  productId,
+  quantity,
+  connection
+) => {
+  await productModel.updateStockQuantityAfterImportedWithTrans(
+    productId,
+    quantity,
     connection
   );
 };

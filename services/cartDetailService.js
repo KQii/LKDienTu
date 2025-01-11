@@ -27,6 +27,17 @@ exports.getCartDetailByIdService = async cartDetailId => {
   return cartDetail;
 };
 
+exports.getCartDetailByAccountIdAndProductIdService = async (
+  accountId,
+  productId
+) => {
+  const cartDetail = await cartDetailModel.getCartDetailByAccountIdAndProductId(
+    accountId,
+    productId
+  );
+  return cartDetail;
+};
+
 exports.deleteCartDetailService = async cartDetailId => {
   const result = await cartDetailModel.deleteCartDetailById(cartDetailId);
   if (result.affectedRows === 0) {
@@ -35,6 +46,7 @@ exports.deleteCartDetailService = async cartDetailId => {
 };
 
 exports.createCartDetailService = async cartDetailData => {
+  console.log(cartDetailData);
   const available = await productModel.checkCreateProductAvailable(
     cartDetailData.AccountID,
     cartDetailData.ProductID,
@@ -69,8 +81,13 @@ exports.updateCartDetailService = async (cartDetailId, cartDetailData) => {
 };
 
 exports.getMyCartService = async accountId => {
-  const myCartDetails = await cartDetailModel.getMyCartDetails(accountId);
-  return myCartDetails;
+  const myCart = await cartDetailModel.getMyCart(accountId);
+  return myCart;
+};
+
+exports.getMyCartDetailService = async accountId => {
+  const myCartDetail = await cartDetailModel.getMyCartDetail(accountId);
+  return myCartDetail;
 };
 
 exports.updateMyCartDetailService = async (accountId, cartDetailData) => {

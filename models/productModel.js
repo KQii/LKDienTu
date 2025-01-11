@@ -59,6 +59,25 @@ exports.getProductById = async id => {
   return rows[0];
 };
 
+exports.getProductByIdWithTrans = async (id, connection) => {
+  const [rows] = await connection.query(
+    `
+    SELECT
+      p.productID,
+      JSON_OBJECT(
+        'ProductCatalogID', pc.ProductCatalogID,
+        'ProductCatalogName', pc.ProductCatalogName
+      ) AS productCatalog,
+      p.productName, p.describeProduct, p.image, p.productInformation, p.quantity, p.price, p.sale, p.hide
+    FROM product AS p
+    JOIN product_catalog AS pc ON p.productCatalogID = pc.productCatalogID
+    WHERE p.productID = ?
+    `,
+    [id]
+  );
+  return rows[0];
+};
+
 exports.getProductByProductName = async productName => {
   const [rows] = await db.query(`SELECT * FROM product WHERE productName = ?`, [
     productName
@@ -141,7 +160,7 @@ exports.checkCreateProductAvailable = async (
 ) => {
   const [res] = await db.query(
     `
-    SELECT orderedNumber FROM cart_detail WHERE accountID = ? AND productID = ?
+    SELECT OrderedNumber FROM cart_detail WHERE AccountID = ? AND ProductID = ?
     `,
     [accountID, productID]
   );
@@ -176,4 +195,14 @@ exports.updateStockQuantityAfterPurchasedWithTrans = async (
   const query = `UPDATE product SET quantity = quantity - ? WHERE productID = ?`;
 
   await connection.execute(query, [orderedNumber, productID]);
+};
+
+exports.updateStockQuantityAfterImportedWithTrans = async (
+  productId,
+  quantity,
+  connection
+) => {
+  const query = `UPDATE product SET quantity = quantity + ? WHERE productID = ?`;
+
+  await connection.execute(query, [quantity, productId]);
 };

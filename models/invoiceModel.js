@@ -221,6 +221,67 @@ exports.getMyInvoices = async id => {
   return invoices;
 };
 
+exports.getMyInvoicesWithTrans = async (id, reqQuery, connection) => {
+  const invoiceQuery = `
+  SELECT
+  i.InvoiceID, AccountID, InvoiceDate, Paid_Method, IsPaid, IsDelete
+  FROM invoice AS i`;
+
+  const invoiceFeatures = new APIFeatures(invoiceQuery, reqQuery, 'invoice')
+    .filter()
+    .sort()
+    .paginate();
+
+  if (invoiceFeatures.query.includes('WHERE')) {
+    invoiceFeatures.query = invoiceFeatures.query.replace(
+      'WHERE',
+      'WHERE AccountID = ? AND '
+    );
+  } else {
+    invoiceFeatures.query = invoiceFeatures.query.replace(
+      'FROM invoice AS i',
+      'FROM invoice AS i WHERE AccountID = ? '
+    );
+  }
+  invoiceFeatures.values.unshift(id);
+
+  const [invoices] = await connection.execute(
+    invoiceFeatures.query,
+    invoiceFeatures.values
+  );
+
+  if (invoices.length === 0) return [];
+
+  // Lấy danh sách các InvoiceID đã lọc
+  const invoiceIds = invoices.map(inv => inv.InvoiceID);
+
+  // Lấy tất cả chi tiết hóa đơn liên quan đến các hóa đơn đã lọc
+  const detailsQuery = `
+    SELECT 
+      id.InvoiceDetailID, id.ProductID, id.PaidNumber, id.UnitPrice, id.SalePercent,
+      i.InvoiceID
+    FROM invoice_detail AS id
+    JOIN invoice AS i ON id.InvoiceID = i.InvoiceID
+    WHERE i.InvoiceID IN (${invoiceIds.map(() => '?').join(', ')})
+  `;
+
+  const [details] = await connection.execute(detailsQuery, invoiceIds);
+
+  // Gộp dữ liệu hóa đơn và chi tiết hóa đơn
+  let result = invoices.map(invoice => {
+    const relatedDetails = details.filter(
+      detail => detail.InvoiceID === invoice.InvoiceID
+    );
+    return {
+      ...invoice,
+      InvoiceDetails: relatedDetails.map(({ InvoiceID, ...rest }) => rest)
+    };
+  });
+
+  result = APIFeatures.limitFieldsOnProcessedData(result, reqQuery.fields);
+  return result;
+};
+
 exports.createInvoiceWithTrans = async (accountId, data, connection) => {
   const query = `INSERT INTO invoice (AccountID, InvoiceDate, Paid_Method, IsPaid) VALUES (?, NOW(), ?, ?)`;
   const [result] = await connection.execute(query, [
@@ -229,5 +290,5 @@ exports.createInvoiceWithTrans = async (accountId, data, connection) => {
     data.IsPaid
   ]);
 
-  return this.getInvoiceById(result.insertId);
+  return this.getInvoiceByIdWithTrans(result.insertId, connection);
 };

@@ -82,7 +82,6 @@ exports.updateProduct = catchAsync(async (req, res, next) => {
     req.params.id,
     req.body
   );
-
   if (productNameExists) {
     return next(
       new AppError(

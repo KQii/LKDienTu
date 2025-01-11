@@ -18,7 +18,7 @@ router
   .route('/')
   .get(
     authController.protect,
-    authController.restrictTo('Superadmin', 'Admin'),
+    authController.restrictTo('Superadmin', 'Admin', 'User'),
     productValidator.validateFeatures,
     handleValidationErrors,
     productController.getAllProducts

@@ -39,12 +39,12 @@ router
   )
   .patch(
     authController.protect,
-    authController.restrictTo('User'),
+    authController.restrictTo('Admin'),
     cartDetailController.updateCartDetail
   )
   .delete(
     authController.protect,
-    authController.restrictTo('Admin', 'User'),
+    authController.restrictTo('Admin'),
     cartDetailController.deleteCartDetail
   );
 

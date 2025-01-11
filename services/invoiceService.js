@@ -34,8 +34,13 @@ exports.updateInvoiceService = async (invoiceId, invoiceData) => {
   return updatedInvoice;
 };
 
-exports.getMyInvoicesService = async accountId => {
-  const myInvoices = await invoiceModel.getMyInvoices(accountId);
+exports.getMyInvoicesService = async (accountId, reqQuery, connection) => {
+  // const myInvoices = await invoiceModel.getMyInvoices(accountId);
+  const myInvoices = await invoiceModel.getMyInvoicesWithTrans(
+    accountId,
+    reqQuery,
+    connection
+  );
   return myInvoices;
 };
 
