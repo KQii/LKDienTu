@@ -1,7 +1,5 @@
 const receiptModel = require('../models/receiptModel');
-const AppError = require('../utils/appError');
 const filterObj = require('../utils/filterObj');
-const mapKeysAndValues = require('../utils/mapKeysAndValues');
 
 exports.getAllReceiptsService = async (reqQuery, connection) => {
   // prettier-ignore
