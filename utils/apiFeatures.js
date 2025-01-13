@@ -5,9 +5,7 @@ const allowedValuesMap = {
   ],
 
   // prettier-ignore
-  productCatalog: [
-  'pc1.productCatalogID', 'pc1.productCatalogName', 'parent', '-pc1.productCatalogID', '-pc1.productCatalogName', '-parent'
-  ],
+  productCatalog: ['productCatalogID', 'productCatalogName', '-productCatalogID', '-productCatalogName'],
 
   // prettier-ignore
   account: ['AccountID', 'AccountName', 'CIC', 'Mail', 'Role', 'r.RoleID', 'RoleName', '-AccountID', '-AccountName', '-CIC', '-Mail', '-Role', '-r.RoleID', '-RoleName'],
@@ -53,10 +51,10 @@ const specialFieldsMap = {
       'RoleID', r.RoleID,
       'RoleName', r.RoleName
     ) AS Role`,
-  parent: `IF(pc1.ParentID IS NULL, NULL, JSON_OBJECT(
-        'productCatalogID', pc2.productCatalogID,
-        'productCatalogName', pc2.productCatalogName
-      )) AS parent`,
+  // parent: `IF(pc1.ParentID IS NULL, NULL, JSON_OBJECT(
+  //       'productCatalogID', pc2.productCatalogID,
+  //       'productCatalogName', pc2.productCatalogName
+  //     )) AS parent`,
   Product: `JSON_OBJECT(
         'ProductID', p.ProductID,
         'ProductName', p.ProductName,

@@ -1,20 +1,33 @@
 const productCatalogService = require('../services/productCatalogService');
 const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/appError');
+const db = require('../database');
 
 exports.getAllProductCatalogs = catchAsync(async (req, res, next) => {
-  const productCatalogs = await productCatalogService.getAllProductCatalogsService(
-    req.query
-  );
+  const connection = await db.getConnection();
+  try {
+    await connection.beginTransaction();
 
-  // SEND RESPONSE
-  res.status(200).json({
-    status: 'success',
-    results: productCatalogs.length,
-    data: {
-      productCatalogs
-    }
-  });
+    const productCatalogs = await productCatalogService.getAllProductCatalogsServiceWithTrans(
+      req.query,
+      connection
+    );
+
+    await connection.commit();
+
+    res.status(200).json({
+      status: 'success',
+      results: productCatalogs.length,
+      data: {
+        productCatalogs
+      }
+    });
+  } catch (err) {
+    await connection.rollback();
+    return next(err);
+  } finally {
+    connection.release();
+  }
 });
 
 exports.getProductCatalog = catchAsync(async (req, res, next) => {

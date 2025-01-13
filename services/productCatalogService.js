@@ -23,6 +23,21 @@ exports.getAllProductCatalogsService = async reqQuery => {
   return allProductCatalogs;
 };
 
+exports.getAllProductCatalogsServiceWithTrans = async (
+  reqQuery,
+  connection
+) => {
+  // prettier-ignore
+  const validRequestQuery = filterObj(reqQuery,
+    'productCatalogID', 'productCatalogName', 'sort', 'fields', 'page', 'limit');
+
+  const allProductCatalogs = await productCatalogModel.getAllProductCatalogsWithTrans(
+    validRequestQuery,
+    connection
+  );
+  return allProductCatalogs;
+};
+
 exports.createNewProductCatalogService = async productCatalogData => {
   const result = await productCatalogModel.createProductCatalog(
     productCatalogData

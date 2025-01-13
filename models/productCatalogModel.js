@@ -27,6 +27,57 @@ exports.getAllProductCatalogs = async reqQuery => {
   return rows;
 };
 
+exports.getAllProductCatalogsWithTrans = async (reqQuery, connection) => {
+  const catalogQuery = `
+  SELECT
+  p.productCatalogID, productCatalogName
+  FROM product_catalog AS p`;
+
+  const catalogFeatures = new APIFeatures(
+    catalogQuery,
+    reqQuery,
+    'productCatalog'
+  )
+    .filter()
+    .sort()
+    .paginate();
+
+  const [catalogs] = await connection.execute(
+    catalogFeatures.query,
+    catalogFeatures.values
+  );
+
+  if (catalogs.length === 0) return [];
+
+  // Lấy danh sách các InvoiceID đã lọc
+  const catalogIds = catalogs.map(cat => cat.productCatalogID);
+
+  // Lấy tất cả chi tiết hóa đơn liên quan đến các hóa đơn đã lọc
+  const detailsQuery = `
+    SELECT 
+      pc1.productCatalogID, pc1.productCatalogName, pc1.parentID
+    FROM product_catalog AS pc1
+    JOIN product_catalog AS pc2 ON pc1.parentID = pc2.productCatalogID
+    WHERE pc1.parentID IN (${catalogIds.map(() => '?').join(', ')})
+  `;
+
+  const [details] = await connection.execute(detailsQuery, catalogIds);
+
+  // Gộp dữ liệu hóa đơn và chi tiết hóa đơn
+  let result = catalogs.map(catalog => {
+    const relatedDetails = details.filter(
+      detail => detail.parentID === catalog.productCatalogID
+    );
+    return {
+      ...catalog,
+      childs: relatedDetails.map(({ parentID, ...rest }) => rest)
+    };
+  });
+
+  result = APIFeatures.limitFieldsOnProcessedData(result, reqQuery.fields);
+  return result;
+};
+
 exports.getProductCatalogById = async id => {
   const [rows] = await db.query(
     `
