@@ -42,6 +42,18 @@ exports.getAllProductCatalogsWithTrans = async (reqQuery, connection) => {
     .sort()
     .paginate();
 
+  if (catalogFeatures.query.includes('WHERE')) {
+    catalogFeatures.query = catalogFeatures.query.replace(
+      'WHERE',
+      'WHERE parentID IS null AND '
+    );
+  } else {
+    catalogFeatures.query = catalogFeatures.query.replace(
+      'FROM product_catalog AS p',
+      'FROM product_catalog AS p WHERE parentID IS null'
+    );
+  }
+
   const [catalogs] = await connection.execute(
     catalogFeatures.query,
     catalogFeatures.values
