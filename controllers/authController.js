@@ -7,6 +7,8 @@ const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/appError');
 const sendEmail = require('../utils/email');
 
+const db = require('../database');
+
 const signToken = id => {
   return jwt.sign({ id }, process.env.JWT_SECRET, {
     expiresIn: process.env.JWT_EXPIRES_IN
@@ -140,6 +142,65 @@ exports.restrictTo = (...roles) => {
 
     next();
   };
+};
+
+exports.checkPermission = (action, entity) => {
+  return catchAsync(async (req, res, next) => {
+    const { AccountID } = req.Account;
+    console.log(AccountID);
+
+    // Check if this account has any active roles
+    const [roleData] = await db.query(
+      `
+      SELECT r.RoleID, r.RoleName
+      FROM authority a
+      JOIN roles r ON a.RoleID = r.RoleID
+      WHERE a.AccountID = ? AND a.Status = 1;  
+      `,
+      [AccountID]
+    );
+
+    if (roleData.length === 0) {
+      return next(
+        new AppError('Your account does not have any active roles.', 403)
+      );
+    }
+
+    const { RoleID } = roleData[0];
+
+    // Get entity ID from entity name
+    const [
+      entityData
+    ] = await db.query(`SELECT EntityID FROM entity WHERE EntityName = ?`, [
+      entity
+    ]);
+
+    if (entityData.length === 0) {
+      return next(new AppError(`Entity '${entity}' is not defined.`, 400));
+    }
+
+    const { EntityID } = entityData[0];
+
+    // Check if this role has permission to perform this action on this entity
+    const [permissionData] = await db.query(
+      `
+      SELECT p.PermissionID
+      FROM permission p
+      JOIN action a ON p.ActionID = a.ActionID
+      WHERE p.RoleID = ? AND a.ActionName = ? AND p.EntityID = ?
+      `,
+      [RoleID, action, EntityID]
+    );
+
+    if (permissionData.length === 0) {
+      return next(
+        new AppError('You do not have permission to perform this action.', 403)
+      );
+    }
+
+    // GRANTED ACCESS TO PROTECTED ROUTE
+    next();
+  });
 };
 
 exports.forgotPassword = catchAsync(async (req, res, next) => {

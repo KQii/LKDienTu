@@ -10,6 +10,7 @@ const cors = require('cors');
 const AppError = require('./utils/appError');
 const globalErrorHandler = require('./controllers/errorController');
 const productRouter = require('./routes/productRoutes');
+const productV2Router = require('./routes/productV2Routes');
 const accountRouter = require('./routes/accountRoutes');
 const roleRouter = require('./routes/roleRoutes');
 const productCatalogRouter = require('./routes/productCatalogRoutes');
@@ -18,7 +19,7 @@ const cartDetailRouter = require('./routes/cartDetailRoutes');
 const invoiceRouter = require('./routes/invoiceRoutes');
 const invoiceDetailRouter = require('./routes/invoiceDetailRoutes');
 const receiptRouter = require('./routes/receiptRoutes');
-const receiptDetailRouter = require('./routes/receiptDetailRoutes');
+// const receiptDetailRouter = require('./routes/receiptDetailRoutes');
 
 const app = express();
 
@@ -61,6 +62,7 @@ app.use((req, res, next) => {
 });
 
 app.use('/api/v1/products', productRouter);
+app.use('/api/v2/products', productV2Router);
 app.use('/api/v1/accounts', accountRouter);
 app.use('/api/v1/roles', roleRouter);
 app.use('/api/v1/productCatalogs', productCatalogRouter);
