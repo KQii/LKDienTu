@@ -30,27 +30,54 @@ exports.getAllProductCatalogs = catchAsync(async (req, res, next) => {
   }
 });
 
-exports.getProductCatalog = catchAsync(async (req, res, next) => {
-  const productCatalog = await productCatalogService.getProductCatalogByIdService(
-    req.params.id
-  );
-  if (!productCatalog)
-    return next(
-      new AppError(`ProductCatalog with ID ${req.params.id} not found`, 404)
-    );
+// exports.getProductCatalog = catchAsync(async (req, res, next) => {
+//   const productCatalog = await productCatalogService.getProductCatalogByIdService(
+//     req.params.id
+//   );
+//   if (!productCatalog)
+//     return next(
+//       new AppError(`ProductCatalog with ID ${req.params.id} not found`, 404)
+//     );
 
-  res.status(200).json({
-    status: 'success',
-    data: {
-      productCatalog
-    }
-  });
+//   res.status(200).json({
+//     status: 'success',
+//     data: {
+//       productCatalog
+//     }
+//   });
+// });
+
+exports.getProductCatalog = catchAsync(async (req, res, next) => {
+  const connection = await db.getConnection();
+  try {
+    await connection.beginTransaction();
+
+    const productCatalog = await productCatalogService.getProductCatalogByIdServiceWithTrans(
+      req.params.id,
+      connection
+    );
+    if (!productCatalog)
+      return next(
+        new AppError(`ProductCatalog with ID ${req.params.id} not found`, 404)
+      );
+
+    await connection.commit();
+
+    res.status(200).json({
+      status: 'success',
+      data: {
+        productCatalog
+      }
+    });
+  } catch (err) {
+    await connection.rollback();
+    return next(err);
+  } finally {
+    connection.release();
+  }
 });
 
 exports.createProductCatalog = catchAsync(async (req, res, next) => {
-  // if (!req.body.ProductCatalogName || req.body.ParentID === undefined) {
-  //   return next(new AppError('Please provide missing information!', 400));
-  // }
   const productCatalogNameExists = await productCatalogService.getProductCatalogByNameService(
     req.body.productCatalogName
   );

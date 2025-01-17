@@ -31,8 +31,16 @@ exports.getAllProductCatalogsServiceWithTrans = async (
   const validRequestQuery = filterObj(reqQuery,
     'productCatalogID', 'productCatalogName', 'sort', 'fields', 'page', 'limit');
 
+  if (validRequestQuery.productCatalogName) {
+    validRequestQuery.productCatalogName = `%${validRequestQuery.productCatalogName}%`; // Sử dụng ký tự đại diện % cho LIKE
+  }
+
+  const renamedReqQuery = mapKeysAndValues(validRequestQuery, {
+    productCatalogName: 'productCatalogName LIKE'
+  });
+
   const allProductCatalogs = await productCatalogModel.getAllProductCatalogsWithTrans(
-    validRequestQuery,
+    renamedReqQuery,
     connection
   );
   return allProductCatalogs;
@@ -48,6 +56,17 @@ exports.createNewProductCatalogService = async productCatalogData => {
 exports.getProductCatalogByIdService = async productCatalogId => {
   const productCatalog = await productCatalogModel.getProductCatalogById(
     productCatalogId
+  );
+  return productCatalog;
+};
+
+exports.getProductCatalogByIdServiceWithTrans = async (
+  productCatalogId,
+  connection
+) => {
+  const productCatalog = await productCatalogModel.getProductCatalogByIdWithTrans(
+    productCatalogId,
+    connection
   );
   return productCatalog;
 };

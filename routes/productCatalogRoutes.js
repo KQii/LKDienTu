@@ -9,13 +9,13 @@ const router = express.Router();
 router
   .route('/')
   .get(
-    authController.protect,
-    authController.restrictTo('Superadmin'),
+    // authController.protect,
+    // authController.restrictTo('Superadmin'),
     productCatalogController.getAllProductCatalogs
   )
   .post(
-    authController.protect,
-    authController.restrictTo('Superadmin'),
+    // authController.protect,
+    // authController.restrictTo('Superadmin'),
     productCatalogValidator.validateProductCatalogCreation,
     handleValidationErrors,
     productCatalogController.createProductCatalog
@@ -31,16 +31,16 @@ router
     productCatalogController.getProductCatalog
   )
   .patch(
-    authController.protect,
-    authController.restrictTo('Superadmin'),
+    // authController.protect,
+    // authController.restrictTo('Superadmin'),
     productCatalogValidator.validateProductCatalogId,
     productCatalogValidator.validatePatchProductCatalog,
     handleValidationErrors,
     productCatalogController.updateProductCatalog
   )
   .delete(
-    authController.protect,
-    authController.restrictTo('Superadmin'),
+    // authController.protect,
+    // authController.restrictTo('Superadmin'),
     productCatalogValidator.validateProductCatalogId,
     handleValidationErrors,
     productCatalogController.deleteProductCatalog

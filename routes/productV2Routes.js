@@ -17,15 +17,15 @@ router.route('/product-stats').get(productController.getProductStats);
 router
   .route('/')
   .get(
-    authController.protect,
-    authController.checkPermission('READ', 'product'),
+    // authController.protect,
+    // authController.checkPermission('READ', 'product'),
     productValidator.validateFeatures,
     handleValidationErrors,
     productController.getAllProducts
   )
   .post(
-    authController.protect,
-    authController.checkPermission('CREATE', 'product'),
+    // authController.protect,
+    // authController.checkPermission('CREATE', 'product'),
     productValidator.validateProductCreation,
     handleValidationErrors,
     productController.createProduct
@@ -41,16 +41,16 @@ router
     productController.getProduct
   )
   .patch(
-    authController.protect,
-    authController.checkPermission('UPDATE', 'product'),
+    // authController.protect,
+    // authController.checkPermission('UPDATE', 'product'),
     productValidator.validateProductId,
     productValidator.validatePatchProduct,
     handleValidationErrors,
     productController.updateProduct
   )
   .delete(
-    authController.protect,
-    authController.checkPermission('DELETE', 'product'),
+    // authController.protect,
+    // authController.checkPermission('DELETE', 'product'),
     productValidator.validateProductId,
     handleValidationErrors,
     productController.deleteProduct

@@ -17,9 +17,14 @@ exports.getAllProductsService = async reqQuery => {
     'productID', 'productCatalogID', 'productCatalogName', 'productName', 'describeProduct', 'image', 'productInformation', 'quantity','price', 'sale', 'hide', 'sort', 'fields', 'page', 'limit');
   console.log('BEFORE RENAME: ', validReqQuery);
 
+  if (validReqQuery.productName) {
+    validReqQuery.productName = `%${validReqQuery.productName}%`; // Sử dụng ký tự đại diện % cho LIKE
+  }
+
   const renamedReqQuery = mapKeysAndValues(validReqQuery, {
     productCatalogID: 'p.productCatalogID',
-    '-productCatalogID': '-p.productCatalogID'
+    '-productCatalogID': '-p.productCatalogID',
+    productName: 'productName LIKE'
   });
   console.log('AFTER RENAME: ', renamedReqQuery);
 
@@ -50,7 +55,7 @@ exports.getProductByIdServiceWithTrans = async (productId, connection) => {
 
 exports.getProductByProductNameService = async productData => {
   const product = await productModel.getProductByProductName(
-    productData.ProductName
+    productData.productName
   );
   return product;
 };

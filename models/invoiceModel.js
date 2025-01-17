@@ -4,7 +4,7 @@ const APIFeatures = require('../utils/apiFeatures');
 exports.getAllInvoicesWithTrans = async (reqQuery, connection) => {
   const invoiceQuery = `
   SELECT
-  i.InvoiceID, AccountID, InvoiceDate, Paid_Method, IsPaid, IsDelete
+  i.InvoiceID, AccountID, InvoiceDate, Paid_Method, IsPaid, IsDelete, ShippingInfo
   FROM invoice AS i`;
 
   const invoiceFeatures = new APIFeatures(invoiceQuery, reqQuery, 'invoice')
@@ -53,7 +53,7 @@ exports.getInvoiceById = async id => {
   const [rows] = await db.query(
     `
     SELECT 
-      i.InvoiceID, i.AccountID, i.InvoiceDate, i.Paid_Method, i.IsPaid, i.IsDelete,
+      i.InvoiceID, i.AccountID, i.InvoiceDate, i.Paid_Method, i.IsPaid, i.IsDelete, i.ShippingInfo,
       id.InvoiceDetailID, id.ProductID, id.UnitPrice, id.SalePercent, id.PaidNumber
     FROM invoice AS i
     LEFT JOIN invoice_detail AS id
@@ -103,7 +103,7 @@ exports.getInvoiceByIdWithTrans = async (id, connection) => {
   const [rows] = await connection.query(
     `
     SELECT 
-      i.InvoiceID, i.AccountID, i.InvoiceDate, i.Paid_Method, i.IsPaid, i.IsDelete,
+      i.InvoiceID, i.AccountID, i.InvoiceDate, i.Paid_Method, i.IsPaid, i.IsDelete, i.ShippingInfo,
       id.InvoiceDetailID, id.ProductID, id.UnitPrice, id.SalePercent, id.PaidNumber
     FROM invoice AS i
     LEFT JOIN invoice_detail AS id
@@ -224,7 +224,7 @@ exports.getMyInvoices = async id => {
 exports.getMyInvoicesWithTrans = async (id, reqQuery, connection) => {
   const invoiceQuery = `
   SELECT
-  i.InvoiceID, AccountID, InvoiceDate, Paid_Method, IsPaid, IsDelete
+  i.InvoiceID, AccountID, InvoiceDate, Paid_Method, IsPaid, IsDelete, ShippingInfo
   FROM invoice AS i`;
 
   const invoiceFeatures = new APIFeatures(invoiceQuery, reqQuery, 'invoice')
@@ -283,11 +283,12 @@ exports.getMyInvoicesWithTrans = async (id, reqQuery, connection) => {
 };
 
 exports.createInvoiceWithTrans = async (accountId, data, connection) => {
-  const query = `INSERT INTO invoice (AccountID, InvoiceDate, Paid_Method, IsPaid) VALUES (?, NOW(), ?, ?)`;
+  const query = `INSERT INTO invoice (AccountID, InvoiceDate, Paid_Method, IsPaid, ShippingInfo) VALUES (?, NOW(), ?, ?, ?)`;
   const [result] = await connection.execute(query, [
     accountId,
     data.PaidMethod,
-    data.IsPaid
+    data.IsPaid,
+    data.ShippingInfo
   ]);
 
   return this.getInvoiceByIdWithTrans(result.insertId, connection);

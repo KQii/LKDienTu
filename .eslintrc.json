@@ -12,6 +12,7 @@
     "no-param-reassign": "off",
     "no-return-await": "off",
     "no-await-in-loop": "off",
+    "no-lonely-if": "off",
     "no-underscore-dangle": "off",
     "class-methods-use-this": "off",
     "no-restricted-syntax": "off",

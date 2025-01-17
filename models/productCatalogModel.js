@@ -43,10 +43,12 @@ exports.getAllProductCatalogsWithTrans = async (reqQuery, connection) => {
     .paginate();
 
   if (catalogFeatures.query.includes('WHERE')) {
-    catalogFeatures.query = catalogFeatures.query.replace(
-      'WHERE',
-      'WHERE parentID IS null AND '
-    );
+    if (!catalogFeatures.query.includes('productCatalogName')) {
+      catalogFeatures.query = catalogFeatures.query.replace(
+        'WHERE',
+        'WHERE parentID IS null AND '
+      );
+    }
   } else {
     catalogFeatures.query = catalogFeatures.query.replace(
       'FROM product_catalog AS p',
@@ -107,6 +109,44 @@ exports.getProductCatalogById = async id => {
     [id]
   );
   return rows[0];
+};
+
+exports.getProductCatalogByIdWithTrans = async (id, connection) => {
+  const catalogQuery = `
+  SELECT
+  p.productCatalogID, productCatalogName
+  FROM product_catalog AS p
+  WHERE p.productCatalogID = ?`;
+
+  const [catalogs] = await connection.execute(catalogQuery, [id]);
+
+  if (catalogs.length === 0) return [];
+
+  const catalogIds = catalogs.map(cat => cat.productCatalogID);
+
+  const detailsQuery = `
+    SELECT 
+      pc1.productCatalogID, pc1.productCatalogName, pc1.parentID
+    FROM product_catalog AS pc1
+    JOIN product_catalog AS pc2 ON pc1.parentID = pc2.productCatalogID
+    WHERE pc1.parentID IN (${catalogIds.map(() => '?').join(', ')})
+  `;
+
+  const [details] = await connection.execute(detailsQuery, catalogIds);
+
+  // Gộp dữ liệu hóa đơn và chi tiết hóa đơn
+  const result = catalogs.map(catalog => {
+    const relatedDetails = details.filter(
+      detail => detail.parentID === catalog.productCatalogID
+    );
+    return {
+      ...catalog,
+      childs: relatedDetails.map(({ parentID, ...rest }) => rest)
+    };
+  });
+
+  // result = APIFeatures.limitFieldsOnProcessedData(result, reqQuery.fields);
+  return result;
 };
 
 exports.getProductCatalogByName = async name => {

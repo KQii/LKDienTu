@@ -8,6 +8,13 @@ const handleDupicateFieldsDB = err => {
   return new AppError(message, 400);
 };
 
+const handleUpdateOrDeleteForeignKeyConstraints = () => {
+  const message =
+    'You cannot delete or update this record because it is related to other records.';
+
+  return new AppError(message, 400);
+};
+
 const handleValidationErrorDB = err => {
   const message = `Invalid input data. ${err.message.slice(
     err.message.indexOf(': ') + 2
@@ -63,6 +70,8 @@ module.exports = (err, req, res, next) => {
       error = handleValidationErrorDB(err);
     if (err.name === 'JsonWebTokenError') error = handleJWTError();
     if (err.name === 'TokenExpiredError') error = handleJWTExpiredError();
+    if (err.code === 'ER_ROW_IS_REFERENCED_2')
+      error = handleUpdateOrDeleteForeignKeyConstraints();
 
     sendErrorProd(error, res);
   }

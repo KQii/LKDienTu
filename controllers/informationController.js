@@ -12,7 +12,7 @@ exports.getAllInfo = catchAsync(async (req, res, next) => {
     status: 'success',
     results: allInfo.length,
     data: {
-      allInfo
+      infos: allInfo
     }
   });
 });

@@ -28,14 +28,14 @@ exports.getAllProducts = async reqQuery => {
   const [rows] = await db.execute(features.query, features.values);
 
   // Virtual fields
-  if (!reqQuery.fields) {
-    const virtualRows = rows.map(row => ({
-      ...row,
-      SalePercent: row.Sale ? `${row.Sale}%` : null,
-      PriceDiscount: row.Price * ((100 - row.Sale) / 100)
-    }));
-    return virtualRows;
-  }
+  // if (!reqQuery.fields) {
+  //   const virtualRows = rows.map(row => ({
+  //     ...row,
+  //     SalePercent: row.Sale ? `${row.Sale}%` : null,
+  //     PriceDiscount: row.Price * ((100 - row.Sale) / 100)
+  //   }));
+  //   return virtualRows;
+  // }
 
   return rows;
 };
@@ -46,8 +46,8 @@ exports.getProductById = async id => {
     SELECT
       p.productID,
       JSON_OBJECT(
-        'ProductCatalogID', pc.ProductCatalogID,
-        'ProductCatalogName', pc.ProductCatalogName
+        'productCatalogID', pc.productCatalogID,
+        'productCatalogName', pc.productCatalogName
       ) AS productCatalog,
       p.productName, p.describeProduct, p.image, p.productInformation, p.quantity, p.price, p.sale, p.hide
     FROM product AS p
@@ -65,8 +65,8 @@ exports.getProductByIdWithTrans = async (id, connection) => {
     SELECT
       p.productID,
       JSON_OBJECT(
-        'ProductCatalogID', pc.ProductCatalogID,
-        'ProductCatalogName', pc.ProductCatalogName
+        'productCatalogID', pc.productCatalogID,
+        'productCatalogName', pc.productCatalogName
       ) AS productCatalog,
       p.productName, p.describeProduct, p.image, p.productInformation, p.quantity, p.price, p.sale, p.hide
     FROM product AS p
@@ -110,15 +110,15 @@ exports.createProduct = async data => {
   `;
 
   const [result] = await db.execute(query, [
-    data.ProductCatalogID,
-    data.ProductName,
-    data.DescribeProduct,
-    data.Image,
+    data.productCatalogID,
+    data.productName,
+    data.describeProduct,
+    data.image,
     data.productInformation,
-    data.Quantity,
-    data.Price,
-    data.Sale,
-    data.Hide
+    data.quantity,
+    data.price,
+    data.sale,
+    data.hide
   ]);
 
   return this.getProductById(result.insertId);
@@ -149,7 +149,6 @@ exports.deleteProductById = async id => {
   const [rows] = await db.query('DELETE FROM product WHERE productID = ?', [
     id
   ]);
-
   return rows;
 };
 

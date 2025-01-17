@@ -110,8 +110,13 @@ class APIFeatures {
           values.push(val2);
         }
       } else {
-        conditions.push(`${key} = ?`);
-        values.push(value);
+        if (key.includes('LIKE')) {
+          conditions.push(`${key} ?`);
+          values.push(value);
+        } else {
+          conditions.push(`${key} = ?`);
+          values.push(value);
+        }
       }
     }
 
