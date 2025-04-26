@@ -37,14 +37,29 @@ exports.createInfo = catchAsync(async (req, res, next) => {
     );
   }
 
-  const newInfo = await informationService.createNewInfoService(req.body);
+  const connection = await db.getConnection();
+  try {
+    await connection.beginTransaction();
 
-  res.status(201).json({
-    status: 'success',
-    data: {
-      info: newInfo
-    }
-  });
+    const newInfo = await informationService.createNewInfoService(
+      req.body,
+      connection
+    );
+
+    await connection.commit();
+
+    res.status(201).json({
+      status: 'success',
+      data: {
+        info: newInfo
+      }
+    });
+  } catch (err) {
+    await connection.rollback();
+    return next(err);
+  } finally {
+    connection.release();
+  }
 });
 
 exports.getInfoById = catchAsync(async (req, res, next) => {

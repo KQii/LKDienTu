@@ -168,7 +168,7 @@ exports.createAccountSuperadmin = async data => {
 
   const query = `
     INSERT INTO account (AccountName, Password, Mail, RoleID)
-    VALUES (?, ?, ?, ?)
+    VALUES (?, ?, ?, ?, ?)
   `;
 
   const [result] = await db.execute(query, [
